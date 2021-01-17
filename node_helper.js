@@ -57,27 +57,24 @@ module.exports = NodeHelper.create({
     request(options, function (error, response, body) {
       if (!error && body) {
         const parsedBody = JSON.parse(body);
+        const leaguesIds = [];
+        const leaguesList = {}
         if('competitions' in parsedBody){
-          var competitions = parsedBody.competitions;
-          var leagueIds = [];
-          for (var i = 0; i < leagues.length; i++) {
-            for (var j = 0; j < competitions.length; j++) {
-              if (competitions[j].id == leagues[i]) {
-                if (showTables && competitions[j].has_table) {
-                  self.getTable(competitions[j].id);
-                }
-
-                leagueIds.push(competitions[j].id)
-                self.sendSocketNotification('LEAGUES', {
-                  name: competitions[j].name,
-                  id: competitions[j].id
-                });
+          const competitions = parsedBody.competitions;
+          for (let i = 0; i < leagues.length; i++) {
+            for (let j = 0; j < competitions.length; j++) {
+              if (competitions[j].id === leagues[i]) {
+                leaguesList[competitions[j].id] = competitions[j]
               }
             }
           }
-          for (var i = 0; i < leagueIds.length; i++) {
-            self.getScores(leagueIds[i]);
-          }
+          Object.keys(leaguesList).forEach(id => {
+            self.getStandings(id)
+            leaguesList[id].has_table && showTables && self.getTable(id)
+          })
+          self.sendSocketNotification('LEAGUES', 
+            { leaguesList }
+          );
         }
       }
     });
@@ -104,9 +101,9 @@ module.exports = NodeHelper.create({
     });
   },
 
-  getScores: function (leagueId) {
+  getStandings: function (leagueId) {
     const url = 'https://www.ta4-data.de/ta/data/competitions/' + leagueId.toString() + '/matches/round/0'
-    Log.info(this.name, 'getScores', url)
+    Log.info(this.name, 'getStandings', url)
     var self = this;
     var options = {
       ...this.requestOptions,
@@ -116,20 +113,20 @@ module.exports = NodeHelper.create({
     request(options, function (error, response, body) {
       if(!error && body) {
         var data = JSON.parse(body);
-        Log.debug(self.name, 'getScores | data', JSON.stringify(data, null, 2))
+        Log.debug(self.name, 'getStandings | data', JSON.stringify(data, null, 2))
         self.refreshTime = ((data.refresh_time  || (5 * 60)) * 1000);
-        Log.debug(self.name, 'getScores | refresh_time', data.refresh_time, self.refreshTime)
+        Log.debug(self.name, 'getStandings | refresh_time', data.refresh_time, self.refreshTime)
         var standings = data;
         self.sendSocketNotification('STANDINGS', {
           leagueId: leagueId,
           standings: standings
         });
         self.timeoutScore[leagueId] = setTimeout(function () {
-          self.getScores(leagueId);
+          self.getStandings(leagueId);
         }, self.refreshTime);
       } else {
         self.timeoutScore[leagueId] = setTimeout(function () {
-          self.getScores(leagueId);
+          self.getStandings(leagueId);
         }, 5 * 60 * 1000);
       }
     });
