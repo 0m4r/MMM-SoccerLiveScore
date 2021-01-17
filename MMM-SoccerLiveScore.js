@@ -111,9 +111,9 @@ Module.register("MMM-SoccerLiveScore", {
       return wrapper;
     }
 
-    const tables = this.tables[this.activeId]    
+    const tables = this.tables && Object.keys(this.tables) ? this.tables[this.activeId] : []
 
-    if (this.tableActive && tables.length > 0 && this.config.showTables) {
+    if (this.config.showTables && this.tableActive && tables.length > 0) {
       tables.forEach(t => {
         const table = t.table
         var places = document.createElement('table');
@@ -289,7 +289,7 @@ Module.register("MMM-SoccerLiveScore", {
           }
         }
       }
-      if (tables.length > 0 && this.config.showTables) {
+      if (this.config.showTables && tables && tables.length > 0 ) {
         this.tableActive = true;
         setTimeout(function () {
           self.updateDom(1000);

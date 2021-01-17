@@ -23,11 +23,11 @@ module.exports = NodeHelper.create({
       'Connection': 'keep-alive',
       'Accept': '*/*',
       'User-Agent': 'TorAlarm/20161202 CFNetwork/808.1.4 Darwin/16.1.0',
-      'Accept-Language': 'de-de',
+      'Accept-Language': 'en-us',
       'Accept-Encoding': 'gzip',
       'Content-Length': '49',
     },
-    body: '{"lng":"de-DE","device_type":0,"decode":"decode"}',
+    body: '{"lng":"en-US","device_type":0,"decode":"decode"}',
     form: false
   },
 
