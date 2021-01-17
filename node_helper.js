@@ -7,8 +7,8 @@
  * MIT Licensed.
  */
 
-var NodeHelper = require('node_helper');
-var request = require('request');
+const NodeHelper = require('node_helper');
+const request = require('request');
 const Log = require("../../js/logger.js");
 
 module.exports = NodeHelper.create({
@@ -119,7 +119,7 @@ module.exports = NodeHelper.create({
         Log.debug(self.name, 'getScores | data', JSON.stringify(data, null, 2))
         self.refreshTime = ((data.refresh_time  || (5 * 60)) * 1000);
         Log.debug(self.name, 'getScores | refresh_time', data.refresh_time, self.refreshTime)
-        var standings = data.data;
+        var standings = data;
         self.sendSocketNotification('STANDINGS', {
           leagueId: leagueId,
           standings: standings
