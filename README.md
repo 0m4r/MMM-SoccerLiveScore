@@ -35,16 +35,16 @@ The entry in `config.js` can include the following options:
 Here is an example of an entry in `config.js`
 ```
 {
-	module: 'MMM-SoccerLiveScore',
-	position: 'top_left',
-	header: 'Live-Scores',
-	config: {
-		leagues: [35, 1, 9],
+  module: 'MMM-SoccerLiveScore',
+  position: 'top_left',
+  header: 'Live-Scores',
+  config: {
+    leagues: [35, 1, 9],
         showNames: true,
         showLogos: true,
         displayTime: 60 * 1000,
         showTables: true
-	}
+  }
 },
 ```
 

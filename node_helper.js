@@ -3,7 +3,7 @@
 /* Magic Mirror
  * Module: MMM-SoccerLiveScore
  *
- * By Luke Scheffler https://github.com/LukeSkywalker92
+ * By Omar Adobati https://github.com/0m4r
  * MIT Licensed.
  */
 
@@ -15,6 +15,7 @@ module.exports = NodeHelper.create({
   refreshTime: 2 * 60 * 1000,
   timeoutScore: [],
   timeoutTable: [],
+  baseURL: 'https://www.ta4-data.de/ta/data',
   requestOptions: {
     method: 'POST',
     headers: {
@@ -46,18 +47,17 @@ module.exports = NodeHelper.create({
       clearTimeout(this.timeoutTable[id]);
     })
     
-    const url = 'https://www.ta4-data.de/ta/data/competitions'
-    Log.debug(this.name, 'getLeagueIds', url)
+    const url = this.baseURL + '/competitions'
+    Log.info(this.name, 'getLeagueIds', url)
     var self = this;
     var options = {
       ...this.requestOptions,
       url
     }
 
-    request(options, function (error, response, body) {
+    request(options, function (error, _response, body) {
       if (!error && body) {
         const parsedBody = JSON.parse(body);
-        const leaguesIds = [];
         const leaguesList = {}
         if('competitions' in parsedBody){
           const competitions = parsedBody.competitions;
@@ -72,51 +72,56 @@ module.exports = NodeHelper.create({
             self.getStandings(id)
             leaguesList[id].has_table && showTables && self.getTable(id)
           })
-          self.sendSocketNotification('LEAGUES', 
-            { leaguesList }
-          );
         }
+        self.sendSocketNotification('LEAGUES', 
+          { leaguesList }
+        );
       }
     });
   },
 
   getTable: function (leagueId) {
-    const url = 'https://www.ta4-data.de/ta/data/competitions/' + leagueId.toString() + '/table'
+    const url = this.baseURL + '/competitions/' + leagueId.toString() + '/table'
     Log.info(this.name, 'getTable', url)
-    var self = this;
-    var options = {
+    const self = this;
+    const options = {
       ...this.requestOptions,
       url
     }
     request(options, function (error, response, body) {
       if (!error && body) {
-        var data = JSON.parse(body);
-        data = data.data;
-        const tables = data.filter(d => d.type === 'table')
+        const data = JSON.parse(body);
+        Log.debug(self.name, 'getTable | data', JSON.stringify(data, null, 2))
+        self.refreshTime = ((data.refresh_time  || (5 * 60)) * 1000);
+        Log.debug(self.name, 'getTable | refresh_time', data.refresh_time, self.refreshTime)
+        const tables = data.data.filter(d => d.type === 'table')
         self.sendSocketNotification('TABLE', {
           leagueId: leagueId,
           table: tables
         });
+        self.timeoutTable[leagueId] = setTimeout(function () {
+          self.getTable(leagueId);
+        }, self.refreshTime);
       }
     });
   },
 
   getStandings: function (leagueId) {
-    const url = 'https://www.ta4-data.de/ta/data/competitions/' + leagueId.toString() + '/matches/round/0'
+    const url = this.baseURL + '/competitions/' + leagueId.toString() + '/matches/round/0'
     Log.info(this.name, 'getStandings', url)
-    var self = this;
-    var options = {
+    const self = this;
+    const options = {
       ...this.requestOptions,
       url
     }
 
     request(options, function (error, response, body) {
       if(!error && body) {
-        var data = JSON.parse(body);
-        Log.debug(self.name, 'getStandings | data', JSON.stringify(data, null, 2))
+        const data = JSON.parse(body);
+        Log.info(self.name, 'getStandings | data', JSON.stringify(data, null, 2))
         self.refreshTime = ((data.refresh_time  || (5 * 60)) * 1000);
         Log.debug(self.name, 'getStandings | refresh_time', data.refresh_time, self.refreshTime)
-        var standings = data;
+        const standings = data;
         self.sendSocketNotification('STANDINGS', {
           leagueId: leagueId,
           standings: standings
@@ -125,6 +130,7 @@ module.exports = NodeHelper.create({
           self.getStandings(leagueId);
         }, self.refreshTime);
       } else {
+        Log.error(error);
         self.timeoutScore[leagueId] = setTimeout(function () {
           self.getStandings(leagueId);
         }, 5 * 60 * 1000);

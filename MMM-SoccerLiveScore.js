@@ -3,7 +3,7 @@
 /* Magic Mirror
  * Module: MMM-SoccerLiveScore
  *
- * By Luke Scheffler https://github.com/LukeSkywalker92
+ * By Omar Adobati https://github.com/0m4r
  * MIT Licensed.
  */
 
@@ -31,7 +31,7 @@ Module.register("MMM-SoccerLiveScore", {
 
   start: function () {
     Log.info("Starting module " + this.name);
-    this.loadet = false;
+    this.loade = false;
     this.logos = {};
     this.standings = {};
     this.leagueIds = {};
@@ -40,12 +40,6 @@ Module.register("MMM-SoccerLiveScore", {
     this.idList = [];
     this.activeId = 0;
     this.sendConfigs();
-
-    // if (this.config.leagues.length > 1) {
-    //   this.changeLeague(0);
-    // } else {
-    //   this.setLeague(this);
-    // }
     Log.debug("with config: " + JSON.stringify(this.config));
   },
 
@@ -64,7 +58,7 @@ Module.register("MMM-SoccerLiveScore", {
 
   setLeague: function () {
     Log.info(this.name, 'setLeague', this.idList)
-    if (this.idList.length == 0) {
+    if (this.idList.length === 0) {
       setTimeout(function () {
         this.setLeague(this);
       }, this.defaultTimeoutValueinMillis);
@@ -76,7 +70,7 @@ Module.register("MMM-SoccerLiveScore", {
 
 
   changeLeague: function (count = 0) {
-    Log.info(this.name, 'changeLeague', this.config.displayTime)
+    Log.info(this.name, 'changeLeague', this.config.displayTime, count)
     clearTimeout(this.changeLeagueTimeout)
     let displayTime = 1000
     index = 0;
@@ -86,7 +80,9 @@ Module.register("MMM-SoccerLiveScore", {
         index = count;
       }
       this.activeId = this.idList[index];
-      this.updateDom(this.defaultTimeoutValueinMillis);
+      Log.info(this.name, 'activeid', this.activeId)
+      // this.updateDom(this.defaultTimeoutValueinMillis);
+      this.updateDom();
     }
 
     this.changeLeagueTimeout = setTimeout(() => {
@@ -109,6 +105,8 @@ Module.register("MMM-SoccerLiveScore", {
     var self = this;
     var wrapper = document.createElement("div");
 
+    Log.info(this.name, 'getDom', this.standings, this.tables, this.activeId);
+
     if(this.idList.length === 0 || !this.idList.includes(this.activeId)) {
       wrapper.innerHTML = '';
       return wrapper;
@@ -117,11 +115,13 @@ Module.register("MMM-SoccerLiveScore", {
     const standing = this.standings && Object.keys(this.standings).length ? this.standings[this.activeId] : []
     const tables = this.tables && Object.keys(this.tables).length ? this.tables[this.activeId] : []
     const showTables = this.config.showTables
+
+    Log.info(this.name, 'getDom', standing, tables);
     
-    if (standing.length === 0 || (showTables && tables && tables.length === 0)) {
-      wrapper.innerHTML = '';
-      return wrapper;
-    }
+    // if (standing.length === 0 || (showTables && tables && tables.length === 0)) {
+    //   wrapper.innerHTML = '';
+    //   return wrapper;
+    // }
 
     if (showTables && this.tableActive && tables.length > 0) {
       tables.forEach(t => {
@@ -144,6 +144,9 @@ Module.register("MMM-SoccerLiveScore", {
         name.innerHTML = 'TEAM';
         name.setAttribute('align', 'left');
         labelRow.appendChild(name);
+
+        var playing = document.createElement("th");
+        labelRow.appendChild(playing);
 
         var gamesLabel = document.createElement("th");
         var gamesLogo = document.createElement("i");
@@ -170,6 +173,8 @@ Module.register("MMM-SoccerLiveScore", {
         for (var i = 0; i < table.length; i++) {
           var place = document.createElement('tr');
 
+          place.setAttribute('style', 'background-color:' + table[i].marker_color + '0d')
+
           var number = document.createElement('td');
           number.innerHTML = i + 1;
           place.appendChild(number);
@@ -192,6 +197,15 @@ Module.register("MMM-SoccerLiveScore", {
             team_name.innerHTML = table[i].team_name;
             place.appendChild(team_name);
           }
+
+          var is_playing = document.createElement('td');
+          is_playing.setAttribute('align', 'right');
+          const is_playing_dot = document.createElement('p');
+          if(table[i].is_playing) {
+            is_playing_dot.classList.add('MMM-SoccerLiveScore-active-dot');
+          }
+          is_playing.appendChild(is_playing_dot);
+          place.appendChild(is_playing);
 
           var games = document.createElement('td');
           games.innerHTML = table[i].games;
@@ -225,7 +239,7 @@ Module.register("MMM-SoccerLiveScore", {
       title.innerHTML = (this.leagueIds[this.activeId].name + roundLabel).trim()
       wrapper.appendChild(title);
 
-      const activeLeagueStandings = standing.data;
+      const activeLeagueStandings = standing.data || [];
       for (let i = 0; i < activeLeagueStandings.length; i++) {
         const activeMatches = activeLeagueStandings[i].matches || []
         if (activeMatches.length > 0) {
@@ -315,10 +329,11 @@ Module.register("MMM-SoccerLiveScore", {
   },
 
   socketNotificationReceived: function (notification, payload) {
-    Log.debug(this.name, "socketNotificationReceived", notification, payload)
+    Log.info(this.name, "socketNotificationReceived", notification, payload)
     if (notification === 'LEAGUES') {
       this.idList = Object.keys(payload.leaguesList)
       this.leagueIds = payload.leaguesList
+      console.log(this.idList, this.leagueIds)
       if (this.idList && this.idList[0]) {
         this.changeLeague(this.idList[0])
       }
@@ -332,5 +347,6 @@ Module.register("MMM-SoccerLiveScore", {
     } else {
       Log.error(this.name, "unknown notification", notification, payload)
     }
+    // this.updateDom();
   }
 });

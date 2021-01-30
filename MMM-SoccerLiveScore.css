@@ -19,3 +19,26 @@
     color: red;
 }
 
+.MMM-SoccerLiveScore-active-dot {
+    margin: 0;
+    padding: 0;
+    width: 8px;
+    height: 8px;
+    background-color: red;
+    border-radius: 100%;
+    animation: pulsate 4s ease-out;
+    animation-iteration-count: infinite;
+    opacity: 0.1;
+}
+@keyframes pulsate {
+    0% {
+        opacity: 0.1;
+    }
+    50% {
+        opacity: 1.0;
+    }
+    100% {
+        opacity: 0.1;
+    }
+}
+
