@@ -70,7 +70,7 @@ Module.register("MMM-SoccerLiveScore", {
 
 
   changeLeague: function (count = 0) {
-    Log.info(this.name, 'changeLeague', this.config.displayTime, count)
+    Log.info(this.name, 'changeLeague', this.config.displayTime)
     clearTimeout(this.changeLeagueTimeout)
     let displayTime = 1000
     index = 0;
@@ -80,8 +80,6 @@ Module.register("MMM-SoccerLiveScore", {
         index = count;
       }
       this.activeId = this.idList[index];
-      Log.info(this.name, 'activeid', this.activeId)
-      // this.updateDom(this.defaultTimeoutValueinMillis);
       this.updateDom();
     }
 
@@ -101,11 +99,10 @@ Module.register("MMM-SoccerLiveScore", {
   },
 
   getDom: function () {
+    Log.debug(this.name, 'getDom', this.activeId, 'table', this.tableActive);
     clearTimeout(this.standingsTableTimout);
-    var self = this;
-    var wrapper = document.createElement("div");
-
-    Log.info(this.name, 'getDom', this.standings, this.tables, this.activeId);
+    const self = this;
+    const wrapper = document.createElement("div");
 
     if(this.idList.length === 0 || !this.idList.includes(this.activeId)) {
       wrapper.innerHTML = '';
@@ -115,76 +112,76 @@ Module.register("MMM-SoccerLiveScore", {
     const standing = this.standings && Object.keys(this.standings).length ? this.standings[this.activeId] : []
     const tables = this.tables && Object.keys(this.tables).length ? this.tables[this.activeId] : []
     const showTables = this.config.showTables
-
-    Log.info(this.name, 'getDom', standing, tables);
     
-    // if (standing.length === 0 || (showTables && tables && tables.length === 0)) {
-    //   wrapper.innerHTML = '';
-    //   return wrapper;
-    // }
+    if (standing.length === 0 || (showTables && tables && tables.length === 0)) {
+      wrapper.innerHTML = '';
+      return wrapper;
+    }
 
     if (showTables && this.tableActive && tables.length > 0) {
       tables.forEach(t => {
         const table = t.table
-        var places = document.createElement('table');
+        const places = document.createElement('table');
         places.className = 'xsmall';
-        var title = document.createElement('header');
+        const title = document.createElement('header');
         title.innerHTML = this.leagueIds[this.activeId].name;
         wrapper.appendChild(title);
 
-        var labelRow = document.createElement("tr");
+        const labelRow = document.createElement("tr");
 
-        var position = document.createElement("th");
+        const position = document.createElement("th");
         labelRow.appendChild(position);
 
-        var logo = document.createElement("th");
+        const logo = document.createElement("th");
         labelRow.appendChild(logo);
 
-        var name = document.createElement("th");
+        const name = document.createElement("th");
         name.innerHTML = 'TEAM';
         name.setAttribute('align', 'left');
         labelRow.appendChild(name);
 
-        var playing = document.createElement("th");
+        const playing = document.createElement("th");
         labelRow.appendChild(playing);
 
-        var gamesLabel = document.createElement("th");
-        var gamesLogo = document.createElement("i");
+        const gamesLabel = document.createElement("th");
+        const gamesLogo = document.createElement("i");
         gamesLogo.classList.add("fa", "fa-hashtag");
         gamesLabel.setAttribute('width', '30px');
         gamesLabel.appendChild(gamesLogo);
         labelRow.appendChild(gamesLabel);
 
-        var goalsLabel = document.createElement("th");
-        var goalslogo = document.createElement("i");
+        const goalsLabel = document.createElement("th");
+        const goalslogo = document.createElement("i");
         goalslogo.classList.add("fa", "fa-soccer-ball-o");
         goalsLabel.appendChild(goalslogo);
         goalsLabel.setAttribute('width', '30px');
         labelRow.appendChild(goalsLabel);
 
-        var pointsLabel = document.createElement("th");
-        var pointslogo = document.createElement("i");
+        const pointsLabel = document.createElement("th");
+        const pointslogo = document.createElement("i");
         pointslogo.classList.add("fa", "fa-line-chart");
         pointsLabel.setAttribute('width', '30px');
         pointsLabel.appendChild(pointslogo);
         labelRow.appendChild(pointsLabel);
 
         places.appendChild(labelRow);
-        for (var i = 0; i < table.length; i++) {
-          var place = document.createElement('tr');
 
-          place.setAttribute('style', 'background-color:' + table[i].marker_color + '0d')
+        table.forEach((tableRow, i) => {
+          const place = document.createElement('tr');
+          
+          if(tableRow.marker_color) {
+            place.setAttribute('style', 'background-color:' + tableRow.marker_color + '0d')
+          }
 
-          var number = document.createElement('td');
+          const number = document.createElement('td');
           number.innerHTML = i + 1;
           place.appendChild(number);
 
           if (this.config.showLogos) {
-            var team_logo_cell = document.createElement('td');
-            var team_logo_image = document.createElement('img');
+            const team_logo_cell = document.createElement('td');
+            const team_logo_image = document.createElement('img');
             team_logo_image.className = 'MMM-SoccerLiveScore-team_logo';
-            // team_logo_image.src = 'data:image/png;base64, ' + this.logos[table[i].team_id];
-            team_logo_image.src = 'https://www.toralarm.com/api/proxy/images/ta/images/teams/' + table[i].team_id + '/64/';
+            team_logo_image.src = 'https://www.toralarm.com/api/proxy/images/ta/images/teams/' + tableRow.team_id + '/64/';
             team_logo_image.width = 20;
             team_logo_image.height = 20;
             team_logo_cell.appendChild(team_logo_image);
@@ -192,37 +189,37 @@ Module.register("MMM-SoccerLiveScore", {
           }
 
           if (this.config.showNames) {
-            var team_name = document.createElement('td');
+            const team_name = document.createElement('td');
             team_name.setAttribute('align', 'left');
-            team_name.innerHTML = table[i].team_name;
+            team_name.innerHTML = tableRow.team_name;
             place.appendChild(team_name);
           }
 
-          var is_playing = document.createElement('td');
+          const is_playing = document.createElement('td');
           is_playing.setAttribute('align', 'right');
           const is_playing_dot = document.createElement('p');
-          if(table[i].is_playing) {
+          if(tableRow.is_playing) {
             is_playing_dot.classList.add('MMM-SoccerLiveScore-active-dot');
           }
           is_playing.appendChild(is_playing_dot);
           place.appendChild(is_playing);
 
-          var games = document.createElement('td');
-          games.innerHTML = table[i].games;
+          const games = document.createElement('td');
+          games.innerHTML = tableRow.games;
           place.appendChild(games);
 
-          var goals = document.createElement('td');
-          goals.innerHTML = table[i].dif;
+          const goals = document.createElement('td');
+          goals.innerHTML = tableRow.dif;
           place.appendChild(goals);
 
-          var points = document.createElement('td');
-          points.innerHTML = table[i].points;
+          const points = document.createElement('td');
+          points.innerHTML = tableRow.points;
           place.appendChild(points);
 
           places.appendChild(place);
-        }
+        });
         wrapper.appendChild(places);
-      })
+      });
 
       this.tableActive = false;
       this.standingsTableTimout = setTimeout(function () {
@@ -230,7 +227,6 @@ Module.register("MMM-SoccerLiveScore", {
       }, this.config.displayTime / 4);
       return wrapper;
     } else {
-      
       const matches = document.createElement('table');
       matches.className = 'xsmall';
       const round = standing && 'current_round' in standing ? standing.current_round : null
@@ -240,13 +236,13 @@ Module.register("MMM-SoccerLiveScore", {
       wrapper.appendChild(title);
 
       const activeLeagueStandings = standing.data || [];
-      for (let i = 0; i < activeLeagueStandings.length; i++) {
-        const activeMatches = activeLeagueStandings[i].matches || []
+      activeLeagueStandings.forEach(activeStanding => {
+        const activeMatches = activeStanding.matches || []
         if (activeMatches.length > 0) {
 
           const time_row = document.createElement('tr');
           const time = document.createElement('td');
-          time.innerHTML = moment(activeLeagueStandings[i].time * 1000).format('DD.MM - HH:mm');
+          time.innerHTML = moment(activeStanding.time * 1000).format('DD.MM - HH:mm');
           time.className = 'MMM-SoccerLiveScore-time';
           time.setAttribute('colspan', '7');
           time_row.appendChild(time);
@@ -316,7 +312,7 @@ Module.register("MMM-SoccerLiveScore", {
             matches.appendChild(match);
           })
         }
-      }
+      });
       if (showTables && tables && tables.length > 0) {
         this.tableActive = true;
         this.standingsTableTimout = setTimeout(function () {
@@ -329,11 +325,10 @@ Module.register("MMM-SoccerLiveScore", {
   },
 
   socketNotificationReceived: function (notification, payload) {
-    Log.info(this.name, "socketNotificationReceived", notification, payload)
+    Log.debug(this.name, "socketNotificationReceived", notification, payload)
     if (notification === 'LEAGUES') {
       this.idList = Object.keys(payload.leaguesList)
       this.leagueIds = payload.leaguesList
-      console.log(this.idList, this.leagueIds)
       if (this.idList && this.idList[0]) {
         this.changeLeague(this.idList[0])
       }

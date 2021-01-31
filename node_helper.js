@@ -48,7 +48,7 @@ module.exports = NodeHelper.create({
     })
     
     const url = this.baseURL + '/competitions'
-    Log.info(this.name, 'getLeagueIds', url)
+    Log.debug(this.name, 'getLeagueIds', url)
     var self = this;
     var options = {
       ...this.requestOptions,
@@ -61,13 +61,18 @@ module.exports = NodeHelper.create({
         const leaguesList = {}
         if('competitions' in parsedBody){
           const competitions = parsedBody.competitions;
-          for (let i = 0; i < leagues.length; i++) {
-            for (let j = 0; j < competitions.length; j++) {
-              if (competitions[j].id === leagues[i]) {
-                leaguesList[competitions[j].id] = competitions[j]
-              }
-            }
-          }
+          leagues.forEach(l => {
+            const comp = competitions.find(c => c.id === l)
+            console.log(comp)
+            leaguesList[comp.id] = comp
+          })
+          // for (let i = 0; i < leagues.length; i++) {
+          //   for (let j = 0; j < competitions.length; j++) {
+          //     if (competitions[j].id === leagues[i]) {
+          //       leaguesList[competitions[j].id] = competitions[j]
+          //     }
+          //   }
+          // }
           Object.keys(leaguesList).forEach(id => {
             self.getStandings(id)
             leaguesList[id].has_table && showTables && self.getTable(id)
@@ -76,6 +81,8 @@ module.exports = NodeHelper.create({
         self.sendSocketNotification('LEAGUES', 
           { leaguesList }
         );
+      } else {
+        Log.error(this.name, 'getLeagueIds', error)
       }
     });
   },
@@ -118,7 +125,7 @@ module.exports = NodeHelper.create({
     request(options, function (error, response, body) {
       if(!error && body) {
         const data = JSON.parse(body);
-        Log.info(self.name, 'getStandings | data', JSON.stringify(data, null, 2))
+        Log.debug(self.name, 'getStandings | data', JSON.stringify(data, null, 2))
         self.refreshTime = ((data.refresh_time  || (5 * 60)) * 1000);
         Log.debug(self.name, 'getStandings | refresh_time', data.refresh_time, self.refreshTime)
         const standings = data;
