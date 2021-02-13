@@ -71,7 +71,6 @@ module.exports = NodeHelper.create({
             leaguesList[comp.id] = comp
           })
           Object.keys(leaguesList).forEach(id => {
-            console.log(id, self.showStandings, self.showTables, self.showScorers)
             self.showStandings && self.getStandings(id)
             self.showTables && leaguesList[id].has_table && self.getTable(id)
             self.showScorers && leaguesList[id].has_scorers && self.getScorers(id)
@@ -156,7 +155,7 @@ module.exports = NodeHelper.create({
     request(options, function (error, response, body) {
       if(!error && body) {
         const data = JSON.parse(body);
-        Log.defug(self.name, 'getScorers | data', JSON.stringify(data, null, 2))
+        Log.debug(self.name, 'getScorers | data', JSON.stringify(data, null, 2))
         self.refreshTime = ((data.refresh_time  || (5 * 60)) * 1000);
         Log.debug(self.name, 'getScorers | refresh_time', data.refresh_time, self.refreshTime)
         const scorers = data.data || [];

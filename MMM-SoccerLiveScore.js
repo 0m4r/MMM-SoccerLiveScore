@@ -231,7 +231,7 @@ Module.register("MMM-SoccerLiveScore", {
       });
 
       this.tableActive = false;
-      this.standingActive = !hasTablesToShow;
+      this.standingActive = !hasScorersToShow;
       this.scorersActive = hasScorersToShow;
 
     } else if (hasStandingsToShow && this.standingActive) {
