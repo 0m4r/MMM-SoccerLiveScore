@@ -13,8 +13,12 @@ const Log = require("../../js/logger.js");
 
 module.exports = NodeHelper.create({
   refreshTime: 2 * 60 * 1000,
-  timeoutScore: [],
+  timeoutStandings: [],
   timeoutTable: [],
+  timeoutScorers: [],
+  showStandings: false,
+  showTables: false,
+  showScorers: false,
   baseURL: 'https://www.ta4-data.de/ta/data',
   requestOptions: {
     method: 'POST',
@@ -38,13 +42,14 @@ module.exports = NodeHelper.create({
 
   stop: function () {
     Log.log('Stopping node helper for:', this.name)
-    ([...this.timeoutScore, ...this.timeoutTable]).forEach(id => clearTimeout(id))
+    ([...this.timeoutStandings, ...this.timeoutScorers, ...this.timeoutTable]).forEach(id => clearTimeout(id))
   },
 
-  getLeagueIds: function (leagues, showTables) {
+  getLeagueIds: function (leagues) {
     leagues.forEach(id => {
-      clearTimeout(this.timeoutScore[id]);
+      clearTimeout(this.timeoutStandings[id]);
       clearTimeout(this.timeoutTable[id]);
+      clearTimeout(this.timeoutScorers[id]);
     })
     
     const url = this.baseURL + '/competitions'
@@ -63,19 +68,13 @@ module.exports = NodeHelper.create({
           const competitions = parsedBody.competitions;
           leagues.forEach(l => {
             const comp = competitions.find(c => c.id === l)
-            console.log(comp)
             leaguesList[comp.id] = comp
           })
-          // for (let i = 0; i < leagues.length; i++) {
-          //   for (let j = 0; j < competitions.length; j++) {
-          //     if (competitions[j].id === leagues[i]) {
-          //       leaguesList[competitions[j].id] = competitions[j]
-          //     }
-          //   }
-          // }
           Object.keys(leaguesList).forEach(id => {
-            self.getStandings(id)
-            leaguesList[id].has_table && showTables && self.getTable(id)
+            console.log(id, self.showStandings, self.showTables, self.showScorers)
+            self.showStandings && self.getStandings(id)
+            self.showTables && leaguesList[id].has_table && self.getTable(id)
+            self.showScorers && leaguesList[id].has_scorers && self.getScorers(id)
           })
         }
         self.sendSocketNotification('LEAGUES', 
@@ -133,13 +132,45 @@ module.exports = NodeHelper.create({
           leagueId: leagueId,
           standings: standings
         });
-        self.timeoutScore[leagueId] = setTimeout(function () {
+        self.timeoutStandings[leagueId] = setTimeout(function () {
           self.getStandings(leagueId);
         }, self.refreshTime);
       } else {
         Log.error(error);
-        self.timeoutScore[leagueId] = setTimeout(function () {
+        self.timeoutStandings[leagueId] = setTimeout(function () {
           self.getStandings(leagueId);
+        }, 5 * 60 * 1000);
+      }
+    });
+  },
+
+  getScorers: function (leagueId) {
+    const url = this.baseURL + '/competitions/' + leagueId.toString() + '/scorers'
+    Log.info(this.name, 'getScorers', url)
+    const self = this;
+    const options = {
+      ...this.requestOptions,
+      url
+    }
+
+    request(options, function (error, response, body) {
+      if(!error && body) {
+        const data = JSON.parse(body);
+        Log.info(self.name, 'getScorers | data', JSON.stringify(data, null, 2))
+        self.refreshTime = ((data.refresh_time  || (5 * 60)) * 1000);
+        Log.debug(self.name, 'getScorers | refresh_time', data.refresh_time, self.refreshTime)
+        const scorers = data.data || [];
+        self.sendSocketNotification('SCORERS', {
+          leagueId: leagueId,
+          scorers: scorers
+        });
+        self.timeoutScorers[leagueId] = setTimeout(function () {
+          self.getScorers(leagueId);
+        }, self.refreshTime);
+      } else {
+        Log.error(error);
+        self.timeoutScorers[leagueId] = setTimeout(function () {
+          self.getScorers(leagueId);
         }, 5 * 60 * 1000);
       }
     });
@@ -147,7 +178,10 @@ module.exports = NodeHelper.create({
 
   socketNotificationReceived: function (notification, payload) {
     if (notification === 'CONFIG') {
-      this.getLeagueIds(payload.leagues,  payload.showTables);
+      this.showStandings = payload.showStandings
+      this.showTables = payload.showTables
+      this.showScorers = payload.showScorers
+      this.getLeagueIds(payload.leagues);
     }
   }
 
