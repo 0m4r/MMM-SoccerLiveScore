@@ -156,7 +156,7 @@ module.exports = NodeHelper.create({
     request(options, function (error, response, body) {
       if(!error && body) {
         const data = JSON.parse(body);
-        Log.info(self.name, 'getScorers | data', JSON.stringify(data, null, 2))
+        Log.defug(self.name, 'getScorers | data', JSON.stringify(data, null, 2))
         self.refreshTime = ((data.refresh_time  || (5 * 60)) * 1000);
         Log.debug(self.name, 'getScorers | refresh_time', data.refresh_time, self.refreshTime)
         const scorers = data.data || [];
