@@ -26,7 +26,7 @@
     height: 8px;
     background-color: red;
     border-radius: 100%;
-    animation: pulsate 4s ease-out;
+    animation: pulsate 4s ease-in-out;
     animation-iteration-count: infinite;
     opacity: 0.1;
 }

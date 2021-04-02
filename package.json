@@ -4,8 +4,9 @@
   "description": "MagicMirror-Module for displaying live soccer scores.",
   "main": "MMM-SoccerLiveScore.js",
   "scripts": {
-    "lint": "eslint --ext .js .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix"
   },
   "repository": {
     "type": "git",
@@ -30,6 +31,6 @@
   ],
   "devDependencies": {
     "eslint": "^7.21.0",
-    "prettier": "2.2.1"
+    "eslint-config-prettier": "^8.1.0"
   }
 }
