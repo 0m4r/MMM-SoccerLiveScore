@@ -18,7 +18,6 @@ module.exports = NodeHelper.create({
   showTables: false,
   showScorers: false,
   baseURL: 'https://www.ta4-data.de/ta/data',
-  // baseURL: 'http://www.toralarm.com/api/api',
   requestOptions: {
     method: 'POST',
     headers: {
@@ -31,7 +30,7 @@ module.exports = NodeHelper.create({
       'Accept-Encoding': 'gzip',
       'Content-Length': '49',
     },
-    body: '{lng:"en-US","device_type":0,decode:"decode"}',
+    body: JSON.stringify({ lng: 'en-US', device_type: 0, decode: 'decode' }),
     form: false,
   },
 
@@ -41,11 +40,7 @@ module.exports = NodeHelper.create({
 
   stop: function () {
     Log.log('Stopping node helper for:', this.name);
-    [
-      ...this.timeoutStandings,
-      ...this.timeoutScorers,
-      ...this.timeoutTable,
-    ].forEach((id) => clearTimeout(id));
+    [...this.timeoutStandings, ...this.timeoutScorers, ...this.timeoutTable].forEach((id) => clearTimeout(id));
   },
 
   getLeagueIds: function (leagues) {
@@ -55,7 +50,7 @@ module.exports = NodeHelper.create({
       clearTimeout(this.timeoutScorers[id]);
     });
 
-    const url = `${this.baseURL}'/competitions`;
+    const url = `${this.baseURL}/competitions`;
     Log.debug(this.name, 'getLeagueIds', url);
     const self = this;
     const options = {
@@ -145,7 +140,7 @@ module.exports = NodeHelper.create({
   },
 
   getScorers: function (leagueId) {
-    const url = this.baseURL + '/competitions/' + leagueId.toString() + '/scorers';
+    const url = `${this.baseURL}/competitions/${leagueId.toString()}/scorers`;
     Log.info(this.name, 'getScorers', url);
     const self = this;
     const options = {
@@ -153,7 +148,7 @@ module.exports = NodeHelper.create({
       url,
     };
 
-    request(options, function (error, response, body) {
+    request(options, function (error, _response, body) {
       if (!error && body) {
         const data = JSON.parse(body);
         Log.debug(self.name, 'getScorers | data', JSON.stringify(data, null, 2));
