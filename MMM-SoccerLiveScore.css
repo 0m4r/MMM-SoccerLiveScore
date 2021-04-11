@@ -1,6 +1,6 @@
-/* .module.MMM-SoccerLiveScore {
-  width: fit-content;
-} */
+.MMM-SoccerLiveScore table {
+  overflow: hidden;
+}
 
 .MMM-SoccerLiveScore__time {
   text-align: center;
@@ -30,6 +30,7 @@
 
 .MMM-SoccerLiveScore-active {
   color: red;
+  animation: MMMSoccerLiveScorePulsate 4s infinite alternate ease-in-out ;
 }
 
 .MMM-SoccerLiveScore__is_playing {
@@ -45,12 +46,29 @@
   height: 10px;
   background-color: red;
   border-radius: 100%;
-  animation: pulsate 4s ease-in-out;
+  animation: MMMSoccerLiveScorePulsate 4s infinite alternate ease-in-out;
   animation-iteration-count: infinite;
   opacity: 0.1;
   display: inline-block;
 }
-@keyframes pulsate {
+
+.MMM-SoccerLiveScore-horizontal-infinite-scroll {
+  animation: MMMSoccerLiveScoreScrollLeft 15s infinite linear;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  white-space: nowrap;
+  text-align: left;
+  padding-left: 100%;
+  font-size: 80%;
+}
+
+@keyframes MMMSoccerLiveScoreScrollLeft {
+  to {
+    transform: translateX(-200%);
+  }
+}
+
+@keyframes MMMSoccerLiveScorePulsate {
   0% {
     opacity: 0.1;
   }

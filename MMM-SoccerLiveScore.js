@@ -26,6 +26,7 @@ Module.register('MMM-SoccerLiveScore', {
     showStandings: true,
     showTables: true,
     showScorers: true,
+    showDetails: true,
     logosToInvert: [30001132, 30000991, 30000145], //Juventus team_id in 1, 23, and 328 leagues
   },
 
@@ -92,12 +93,13 @@ Module.register('MMM-SoccerLiveScore', {
       showTables: this.config.showTables,
       showScorers: this.config.showScorers,
       showStandings: this.config.showStandings,
+      showDetails: this.config.showDetails,
     };
     this.sendSocketNotification('CONFIG', config);
   },
 
   getDom: function () {
-    Log.info(this.name, 'getDom', this.activeId);
+    Log.debug(this.name, 'getDom', this.activeId);
     clearTimeout(this.updateDomTimeout);
     const self = this;
     const wrapper = document.createElement('div');
@@ -206,6 +208,19 @@ Module.register('MMM-SoccerLiveScore', {
               match.appendChild(team2_name);
             }
             matches.appendChild(match);
+
+            if (this.config.showDetails && activeMatch.details && activeMatch.details.length) {
+              const matchDetails = document.createElement('tr');
+              const detail = document.createElement('td');
+              detail.setAttribute('colspan', '7');
+              detail.classList.add('MMM-SoccerLiveScore-horizontal-infinite-scroll');
+              detail.style.animationDelay = -1 * activeMatch.details.length + 's';
+              activeMatch.details.forEach((d) => {
+                detail.innerHTML = detail.innerHTML + ' ' + d.minute + ' ' + d.event_text + ' (' + d.team_name + ')'
+              })
+              matchDetails.appendChild(detail)
+              matches.appendChild(matchDetails)
+            }
           });
         }
       });
@@ -452,7 +467,6 @@ Module.register('MMM-SoccerLiveScore', {
     if (notification === 'LEAGUES') {
       this.idList = Object.keys(payload.leaguesList);
       this.leagueIds = payload.leaguesList;
-      Log.log('>>>>', this.leagueIds);
       if (this.idList && this.idList.length > 0) {
         this.changeLeague();
       }
