@@ -9,15 +9,19 @@ It displays live scores of your favorite soccer leagues and competitions.
 
 ### Standing
 
-![](MMM-SoccerLiveScores-Standings.png)
+![](screenhosts/MMM-SoccerLiveScores-Standings.png)
 
 ### Table
 
-![](MMM-SoccerLiveScores-Tables.png)
+![](screenhosts/MMM-SoccerLiveScores-Tables.png)
 
 ### Scorers
 
-![](MMM-SoccerLiveScores-Scorers.png)
+![](screenhosts/MMM-SoccerLiveScores-Scorers.png)
+
+### Standings & Details
+
+![](screenhosts/MMM-SoccerLiveScores-Standings+Details.png)
 
 ## Installation
 
@@ -34,6 +38,7 @@ The entry in `config.js` can include the following options:
 | `showLogos`     | Toggles team logos.<br><br>**Default value:** `true`                                                                                                                                                                                                                                                                                                                       |
 | `displayTime`   | defines how long the information for a league in `leagues` is shown on the screen. This screen time is used to display standings, tables and scorers. For example, if you specify `displayTime` to 30 seconds and `showTables=true`, `showStandings=true`and `showScorers=true` each information will be shown for about 10 seconds. <br><br>**Default value:** 20 \* 1000 |
 | `showStandings` | display the standings for the league <br><br>**Default value:** `true`                                                                                                                                                                                                                                                                                                     |
+| `showDetails`   | display the games scorers whit the standings for the league (it requires `showStandings: true` ) <br><br>**Default value:** `true`                                                                                                                                                                                                                                                                                        |
 | `showTables`    | display the tables for the league (if available) <br><br>**Default value:** `true`                                                                                                                                                                                                                                                                                         |
 | `showScorers`   | display the scorers for the league (if available) <br><br>**Default value:** `true`                                                                                                                                                                                                                                                                                        |
 
