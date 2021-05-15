@@ -52,6 +52,11 @@
   display: inline-block;
 }
 
+.MMM-SoccerLiveScore-details {
+  position: relative;
+  height: 2ch;
+}
+
 .MMM-SoccerLiveScore-horizontal-infinite-scroll {
   animation: MMMSoccerLiveScoreScrollLeft 15s infinite linear;
   transform: translate3d(0, 0, 0);
@@ -60,6 +65,11 @@
   text-align: left;
   padding-left: 100%;
   font-size: 80%;
+
+  margin: 0;
+  position: absolute;
+  top: 0;
+  bottom: 0;
 }
 
 @keyframes MMMSoccerLiveScoreScrollLeft {

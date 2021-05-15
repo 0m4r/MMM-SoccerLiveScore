@@ -212,12 +212,15 @@ Module.register('MMM-SoccerLiveScore', {
             if (this.config.showDetails && activeMatch.details && activeMatch.details.length) {
               const matchDetails = document.createElement('tr');
               const detail = document.createElement('td');
+              detail.classList.add('MMM-SoccerLiveScore-details');
               detail.setAttribute('colspan', '7');
-              detail.classList.add('MMM-SoccerLiveScore-horizontal-infinite-scroll');
-              detail.style.animationDelay = -1 * activeMatch.details.length + 's';
+              const p = document.createElement('p');
+              p.classList.add('MMM-SoccerLiveScore-horizontal-infinite-scroll');
+              p.style.animationDelay = -1 * activeMatch.details.length + 's';
               activeMatch.details.forEach((d) => {
-                detail.innerHTML = detail.innerHTML + ' ' + d.minute + ' ' + d.event_text + ' (' + d.team_name + ')'
+                p.innerHTML += d.minute + ' ' + d.event_text + ' (' + d.team_name + ') '
               })
+              detail.appendChild(p)
               matchDetails.appendChild(detail)
               matches.appendChild(matchDetails)
             }
