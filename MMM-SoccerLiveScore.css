@@ -58,13 +58,15 @@
 }
 
 .MMM-SoccerLiveScore-details-red {
-  color: red;
+  background: red;
   width: 12px;
+  height: 12px;
 }
 
 .MMM-SoccerLiveScore-details-yellow {
-  color: yellow;
+  background: yellow;
   width: 12px;
+  height: 12px;
 }
 
 .MMM-SoccerLiveScore-horizontal-infinite-scroll {
