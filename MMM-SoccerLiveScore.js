@@ -19,7 +19,7 @@ Module.register('MMM-SoccerLiveScore', {
   tablesActive: true,
 
   defaults: {
-    leagues: [1], // Uefa Champions League (UCL)
+    leagues: [1], // UEFA Champions League (UCL)
     displayTime: 20 * 1000, // 20 seconds
     showNames: true,
     showLogos: true,
@@ -27,7 +27,7 @@ Module.register('MMM-SoccerLiveScore', {
     showTables: true,
     showScorers: true,
     showDetails: true,
-    logosToInvert: [30001132, 30000991, 30000145], //Juventus team_id in 1, 23, and 328 leagues
+    logosToInvert: [30001132, 30000991, 30000145], // Juventus team_id in 1, 23, and 328 leagues
   },
 
   getScripts: function () {
@@ -218,7 +218,22 @@ Module.register('MMM-SoccerLiveScore', {
               p.classList.add('MMM-SoccerLiveScore-horizontal-infinite-scroll');
               p.style.animationDelay = -1 * activeMatch.details.length + 's';
               activeMatch.details.forEach((d) => {
-                p.innerHTML += d.minute + ' ' + d.event_text + ' (' + d.team_name + ') '
+                const span = document.createElement('span')
+                if(d.type === 1) {
+                  const i = document.createElement('i')
+                  i.classList.add('fa', 'fa-soccer-ball-o');
+                  p.appendChild(i)
+                } else if (d.type === 4) {
+                  const i = document.createElement('i')
+                  i.classList.add('fa', 'ffa-square', 'MMM-SoccerLiveScore-details-red');
+                  p.appendChild(i)
+                } else if (d.type === 3) {
+                  const i = document.createElement('i')
+                  i.classList.add('fa', 'ffa-square', 'MMM-SoccerLiveScore-details-yellow');
+                  p.appendChild(i)
+                }
+                span.innerHTML += d.minute + ' ' + d.event_text + ' (' + d.team_name + ') '
+                p.appendChild(span)
               })
               detail.appendChild(p)
               matchDetails.appendChild(detail)

@@ -57,6 +57,14 @@
   height: 2ch;
 }
 
+.MMM-SoccerLiveScore-details-red {
+  color: 'red'
+}
+
+.MMM-SoccerLiveScore-details-yellow {
+  color: 'yellow'
+}
+
 .MMM-SoccerLiveScore-horizontal-infinite-scroll {
   animation: MMMSoccerLiveScoreScrollLeft 15s infinite linear;
   transform: translate3d(0, 0, 0);
