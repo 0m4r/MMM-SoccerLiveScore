@@ -57,20 +57,24 @@
   height: 2ch;
 }
 
+.MMM-SoccerLiveScore-details i {
+  margin: 0 0.5ch;
+}
+
 .MMM-SoccerLiveScore-details-red {
   background: red;
-  width: 12px;
+  width: 6px;
   height: 12px;
 }
 
 .MMM-SoccerLiveScore-details-yellow {
   background: yellow;
-  width: 12px;
+  width: 6px;
   height: 12px;
 }
 
 .MMM-SoccerLiveScore-horizontal-infinite-scroll {
-  animation: MMMSoccerLiveScoreScrollLeft 15s infinite linear;
+  animation: MMMSoccerLiveScoreScrollLeft 0s infinite linear;
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   white-space: nowrap;

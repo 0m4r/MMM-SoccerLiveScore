@@ -114,8 +114,8 @@ Module.register('MMM-SoccerLiveScore', {
     const scorers = this.scorers && Object.keys(this.scorers).length ? this.scorers[this.activeId] : [];
 
     const hasStandingsToShow = (this.config.showStandings && standing && Object.keys(standing).length > 0) === true;
-    const hasTablesToShow = (this.leagueIds[this.activeId].has_table && this.config.showTables) === true;
-    const hasScorersToShow = (this.leagueIds[this.activeId].has_scorers && this.config.showScorers) === true;
+    const hasTablesToShow = (this.leagueIds[this.activeId].has_table && this.config.showTables) === true && Object.keys(tables).length > 0;
+    const hasScorersToShow = (this.leagueIds[this.activeId].has_scorers && this.config.showScorers) === true && Object.keys(scorers).length > 0
 
     if (hasStandingsToShow && this.standingActive) {
       const matches = document.createElement('table');
@@ -216,7 +216,8 @@ Module.register('MMM-SoccerLiveScore', {
               detail.setAttribute('colspan', '7');
               const p = document.createElement('p');
               p.classList.add('MMM-SoccerLiveScore-horizontal-infinite-scroll');
-              p.style.animationDelay = -1 * activeMatch.details.length + 's';
+              p.style.animationDelay = -1 * activeMatch.details.length * 0.1 + 's';
+              p.style.animationDuration = this.config.displayTime + 'ms';
               activeMatch.details.forEach((d) => {
                 const span = document.createElement('span')
                 if(d.type === 1) {
