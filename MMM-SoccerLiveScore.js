@@ -228,7 +228,7 @@ Module.register('MMM-SoccerLiveScore', {
                   const i = document.createElement('i')
                   i.classList.add('fa', 'ffa-square', 'MMM-SoccerLiveScore-details-red');
                   p.appendChild(i)
-                } else if (d.type === 3) {
+                } else if ([2, 3].includes(d.type)) {
                   const i = document.createElement('i')
                   i.classList.add('fa', 'ffa-square', 'MMM-SoccerLiveScore-details-yellow');
                   p.appendChild(i)
