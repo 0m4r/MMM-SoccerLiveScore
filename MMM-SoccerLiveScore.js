@@ -11,8 +11,8 @@ Module.register('MMM-SoccerLiveScore', {
   updateDomTimeout: null,
 
   standings: {},
-  tables: [],
-  scorers: [],
+  tables: {},
+  scorers: {},
 
   scorersActive: false,
   standingActive: true,
@@ -47,7 +47,7 @@ Module.register('MMM-SoccerLiveScore', {
     this.tableActive = false;
     this.idList = [];
     this.activeId = null;
-    this.sendConfigs();
+    this.sendConfig();
     Log.debug('with config: ' + JSON.stringify(this.config));
   },
 
@@ -86,7 +86,7 @@ Module.register('MMM-SoccerLiveScore', {
     }
   },
 
-  sendConfigs: function () {
+  sendConfig: function () {
     const config = {
       ...this.config,
       leagues: this.config.leagues,
@@ -95,7 +95,7 @@ Module.register('MMM-SoccerLiveScore', {
       showStandings: this.config.showStandings,
       showDetails: this.config.showDetails,
     };
-    this.sendSocketNotification('CONFIG', config);
+    this.sendSocketNotification(this.name + '-CONFIG', config);
   },
 
   getDom: function () {
@@ -105,7 +105,7 @@ Module.register('MMM-SoccerLiveScore', {
     const wrapper = document.createElement('div');
 
     if (!this.activeId || this.idList.length === 0 || !this.idList.includes(this.activeId)) {
-      wrapper.innerHTML = '';
+      wrapper.innerHTML = 'Loading...';
       return wrapper;
     }
 
@@ -113,9 +113,9 @@ Module.register('MMM-SoccerLiveScore', {
     const tables = this.tables && Object.keys(this.tables).length ? this.tables[this.activeId] : [];
     const scorers = this.scorers && Object.keys(this.scorers).length ? this.scorers[this.activeId] : [];
 
-    const hasStandingsToShow = (this.config.showStandings && standing && Object.keys(standing).length > 0) === true;
-    const hasTablesToShow = (this.leagueIds[this.activeId].has_table && this.config.showTables) === true && Object.keys(tables).length > 0;
-    const hasScorersToShow = (this.leagueIds[this.activeId].has_scorers && this.config.showScorers) === true && Object.keys(scorers).length > 0
+    const hasStandingsToShow = this.config.showStandings === true && standing && Object.keys(standing).length > 0;
+    const hasTablesToShow = (this.leagueIds[this.activeId].has_table && this.config.showTables) === true && Array.isArray(tables) && tables.length > 0;
+    const hasScorersToShow = (this.leagueIds[this.activeId].has_scorers && this.config.showScorers) === true && Array.isArray(scorers) && scorers.length > 0
 
     if (hasStandingsToShow && this.standingActive) {
       const matches = document.createElement('table');
@@ -209,36 +209,67 @@ Module.register('MMM-SoccerLiveScore', {
             }
             matches.appendChild(match);
 
-            if (this.config.showDetails && activeMatch.details && activeMatch.details.length) {
-              const matchDetails = document.createElement('tr');
-              const detail = document.createElement('td');
-              detail.classList.add('MMM-SoccerLiveScore-details');
-              detail.setAttribute('colspan', '7');
-              const p = document.createElement('p');
-              p.classList.add('MMM-SoccerLiveScore-horizontal-infinite-scroll');
-              p.style.animationDelay = -1 * activeMatch.details.length * 0.1 + 's';
-              p.style.animationDuration = this.config.displayTime + 'ms';
-              activeMatch.details.forEach((d) => {
-                const span = document.createElement('span')
-                if(d.type === 1) {
-                  const i = document.createElement('i')
-                  i.classList.add('fa', 'fa-soccer-ball-o');
-                  p.appendChild(i)
-                } else if (d.type === 4) {
-                  const i = document.createElement('i')
-                  i.classList.add('fa', 'ffa-square', 'MMM-SoccerLiveScore-details-red');
-                  p.appendChild(i)
-                } else if ([2, 3].includes(d.type)) {
-                  const i = document.createElement('i')
-                  i.classList.add('fa', 'ffa-square', 'MMM-SoccerLiveScore-details-yellow');
-                  p.appendChild(i)
-                }
-                span.innerHTML += d.minute + ' ' + d.event_text + ' (' + d.team_name + ') '
-                p.appendChild(span)
-              })
-              detail.appendChild(p)
-              matchDetails.appendChild(detail)
-              matches.appendChild(matchDetails)
+            if (this.config.showDetails) {
+              const hasDetails = activeMatch.details && activeMatch.details.length
+              if(hasDetails) {
+                const matchDetails = document.createElement('tr');
+                const detail = document.createElement('td');
+                detail.classList.add('MMM-SoccerLiveScore-details');
+                detail.setAttribute('colspan', '7');
+                const p = document.createElement('p');
+                p.classList.add('MMM-SoccerLiveScore-horizontal-infinite-scroll');
+                p.style.animationDelay = -1 * activeMatch.details.length * 0.1 + 's';
+                p.style.animationDuration = this.config.displayTime + 'ms';
+                activeMatch.details.forEach((d) => {
+                  const span = document.createElement('span')
+                  if(d.type === 1) {
+                    const i = document.createElement('i')
+                    i.classList.add('fa', 'fa-soccer-ball-o');
+                    p.appendChild(i)
+                  } else if (d.type === 4) {
+                    const i = document.createElement('i')
+                    i.classList.add('fa', 'MMM-SoccerLiveScore-details-red');
+                    p.appendChild(i)
+                  } else if ([2, 3].includes(d.type)) {
+                    const i = document.createElement('i')
+                    i.classList.add('fa', 'MMM-SoccerLiveScore-details-yellow');
+                    p.appendChild(i)
+                  }
+                  span.innerHTML += d.minute + ' ' + d.event_text + ' (' + d.team_name + ') '
+                  p.appendChild(span)
+                })
+                detail.appendChild(p)
+                matchDetails.appendChild(detail)
+                matches.appendChild(matchDetails)
+              }
+
+              else if(activeMatch.match_info && activeMatch.match_info && activeMatch.match_info.info_items) {
+                const matchInfo = document.createElement('tr');
+                const info = document.createElement('td');
+                info.classList.add('MMM-SoccerLiveScore-match_info');
+                info.setAttribute('colspan', '7');
+                const p = document.createElement('p');
+                p.classList.add('MMM-SoccerLiveScore-horizontal-infinite-scroll');
+                p.style.animationDelay = -1 * activeMatch.match_info.info_items.length * 0.1 + 's';
+                p.style.animationDuration = this.config.displayTime + 'ms';
+                activeMatch.match_info.info_items.forEach(it => {
+                  if(it.info_type === 'venue') {
+                    const i = document.createElement('i')
+                    i.classList.add('fa', 'fa-ring');
+                    p.appendChild(i)
+                  } else if (it.info_type === 'referee') {
+                    const i = document.createElement('i')
+                    i.classList.add('fa', 'fa-id-card');
+                    p.appendChild(i)
+                  }
+                  const span = document.createElement('span')
+                  span.innerHTML = ' ' + it.subtitle + ' ' + it.title + ' '
+                  p.appendChild(span)
+                })
+                info.appendChild(p)
+                matchInfo.appendChild(info)
+                matches.appendChild(matchInfo)
+              }
             }
           });
         }
@@ -251,113 +282,115 @@ Module.register('MMM-SoccerLiveScore', {
     } else if (hasTablesToShow && this.tableActive) {
       tables.forEach((t) => {
         const table = t.table;
-        const places = document.createElement('table');
-        places.className = 'xsmall';
-        const title = document.createElement('header');
-        title.innerHTML = this.leagueIds[this.activeId].name;
-        wrapper.appendChild(title);
+        if(table) {
+          const places = document.createElement('table');
+          places.className = 'xsmall';
+          const title = document.createElement('header');
+          title.innerHTML = this.leagueIds[this.activeId].name;
+          wrapper.appendChild(title);
 
-        const labelRow = document.createElement('tr');
+          const labelRow = document.createElement('tr');
 
-        const position = document.createElement('th');
-        labelRow.appendChild(position);
-
-        if (this.config.showLogos) {
-          const logo = document.createElement('th');
-          logo.setAttribute('width', '30px');
-          labelRow.appendChild(logo);
-        }
-
-        if (this.config.showNames) {
-          const name = document.createElement('th');
-          name.innerHTML = 'TEAM';
-          name.setAttribute('align', 'left');
-          labelRow.appendChild(name);
-        }
-
-        const playing = document.createElement('th');
-        labelRow.appendChild(playing);
-
-        const gamesLabel = document.createElement('th');
-        const gamesLogo = document.createElement('i');
-        gamesLogo.classList.add('fa', 'fa-hashtag');
-        gamesLabel.setAttribute('width', '30px');
-        gamesLabel.appendChild(gamesLogo);
-        labelRow.appendChild(gamesLabel);
-
-        const goalsLabel = document.createElement('th');
-        const goalsLogo = document.createElement('i');
-        goalsLogo.classList.add('fa', 'fa-soccer-ball-o');
-        goalsLabel.setAttribute('width', '30px');
-        goalsLabel.appendChild(goalsLogo);
-        labelRow.appendChild(goalsLabel);
-
-        const pointsLabel = document.createElement('th');
-        const pointsLogo = document.createElement('i');
-        pointsLogo.classList.add('fa', 'fa-line-chart');
-        pointsLabel.setAttribute('width', '30px');
-        pointsLabel.appendChild(pointsLogo);
-        labelRow.appendChild(pointsLabel);
-
-        places.appendChild(labelRow);
-
-        table.forEach((tableRow, i) => {
-          const place = document.createElement('tr');
-
-          if (tableRow.marker_color) {
-            place.setAttribute('style', 'background-color:' + tableRow.marker_color + '0d');
-          }
-
-          const number = document.createElement('td');
-          number.innerHTML = i + 1;
-          place.appendChild(number);
+          const position = document.createElement('th');
+          labelRow.appendChild(position);
 
           if (this.config.showLogos) {
-            const team_logo_cell = document.createElement('td');
-            const team_logo_image = document.createElement('img');
-            team_logo_image.className = 'MMM-SoccerLiveScore-team_logo';
-            if (this.config.logosToInvert.includes(tableRow.team_id)) {
-              team_logo_image.classList.add('MMM-SoccerLiveScore-team_logo--invert');
-            }
-            team_logo_image.src =
-              'https://www.toralarm.com/api/proxy/images/ta/images/teams/' + tableRow.team_id + '/64/';
-            team_logo_image.width = 20;
-            team_logo_image.height = 20;
-            team_logo_cell.appendChild(team_logo_image);
-            place.appendChild(team_logo_cell);
+            const logo = document.createElement('th');
+            logo.setAttribute('width', '30px');
+            labelRow.appendChild(logo);
           }
 
           if (this.config.showNames) {
-            const team_name = document.createElement('td');
-            team_name.setAttribute('align', 'left');
-            team_name.innerHTML = tableRow.team_name;
-            place.appendChild(team_name);
+            const name = document.createElement('th');
+            name.innerHTML = 'TEAM';
+            name.setAttribute('align', 'left');
+            labelRow.appendChild(name);
           }
 
-          const is_playing = document.createElement('td');
-          is_playing.className = 'MMM-SoccerLiveScore__is_playing';
-          const is_playing_dot = document.createElement('p');
-          if (tableRow.is_playing) {
-            is_playing_dot.classList.add('MMM-SoccerLiveScore__is_playing__active-dot');
-          }
-          is_playing.appendChild(is_playing_dot);
-          place.appendChild(is_playing);
+          const playing = document.createElement('th');
+          labelRow.appendChild(playing);
 
-          const games = document.createElement('td');
-          games.innerHTML = tableRow.games;
-          place.appendChild(games);
+          const gamesLabel = document.createElement('th');
+          const gamesLogo = document.createElement('i');
+          gamesLogo.classList.add('fa', 'fa-hashtag');
+          gamesLabel.setAttribute('width', '30px');
+          gamesLabel.appendChild(gamesLogo);
+          labelRow.appendChild(gamesLabel);
 
-          const goals = document.createElement('td');
-          goals.innerHTML = tableRow.dif;
-          place.appendChild(goals);
+          const goalsLabel = document.createElement('th');
+          const goalsLogo = document.createElement('i');
+          goalsLogo.classList.add('fa', 'fa-soccer-ball-o');
+          goalsLabel.setAttribute('width', '30px');
+          goalsLabel.appendChild(goalsLogo);
+          labelRow.appendChild(goalsLabel);
 
-          const points = document.createElement('td');
-          points.innerHTML = tableRow.points;
-          place.appendChild(points);
+          const pointsLabel = document.createElement('th');
+          const pointsLogo = document.createElement('i');
+          pointsLogo.classList.add('fa', 'fa-line-chart');
+          pointsLabel.setAttribute('width', '30px');
+          pointsLabel.appendChild(pointsLogo);
+          labelRow.appendChild(pointsLabel);
 
-          places.appendChild(place);
-        });
-        wrapper.appendChild(places);
+          places.appendChild(labelRow);
+
+          table.forEach((tableRow, i) => {
+            const place = document.createElement('tr');
+
+            if (tableRow.marker_color) {
+              place.setAttribute('style', 'background-color:' + tableRow.marker_color + '0d');
+            }
+
+            const number = document.createElement('td');
+            number.innerHTML = i + 1;
+            place.appendChild(number);
+
+            if (this.config.showLogos) {
+              const team_logo_cell = document.createElement('td');
+              const team_logo_image = document.createElement('img');
+              team_logo_image.className = 'MMM-SoccerLiveScore-team_logo';
+              if (this.config.logosToInvert.includes(tableRow.team_id)) {
+                team_logo_image.classList.add('MMM-SoccerLiveScore-team_logo--invert');
+              }
+              team_logo_image.src =
+                'https://www.toralarm.com/api/proxy/images/ta/images/teams/' + tableRow.team_id + '/64/';
+              team_logo_image.width = 20;
+              team_logo_image.height = 20;
+              team_logo_cell.appendChild(team_logo_image);
+              place.appendChild(team_logo_cell);
+            }
+
+            if (this.config.showNames) {
+              const team_name = document.createElement('td');
+              team_name.setAttribute('align', 'left');
+              team_name.innerHTML = tableRow.team_name;
+              place.appendChild(team_name);
+            }
+
+            const is_playing = document.createElement('td');
+            is_playing.className = 'MMM-SoccerLiveScore__is_playing';
+            const is_playing_dot = document.createElement('p');
+            if (tableRow.is_playing) {
+              is_playing_dot.classList.add('MMM-SoccerLiveScore__is_playing__active-dot');
+            }
+            is_playing.appendChild(is_playing_dot);
+            place.appendChild(is_playing);
+
+            const games = document.createElement('td');
+            games.innerHTML = tableRow.games;
+            place.appendChild(games);
+
+            const goals = document.createElement('td');
+            goals.innerHTML = tableRow.dif;
+            place.appendChild(goals);
+
+            const points = document.createElement('td');
+            points.innerHTML = tableRow.points;
+            place.appendChild(points);
+
+            places.appendChild(place);
+          });
+          wrapper.appendChild(places);
+        }
       });
 
       this.standingActive = hasStandingsToShow && !hasScorersToShow;
@@ -462,16 +495,17 @@ Module.register('MMM-SoccerLiveScore', {
     const timeSplit = [hasStandingsToShow, hasTablesToShow, hasScorersToShow].filter((v) => v);
     Log.debug(this.name, 'timeSplit', timeSplit.length, this.activeId);
 
+    clearTimeout(this.updateDomTimeout);
     if (timeSplit.length > 0) {
       this.updateDomTimeout = setTimeout(function () {
         self.updateDom(this.defaultTimeoutValueInMillis);
       }, this.config.displayTime / (timeSplit.length || 1));
     } else {
-      clearTimeout(this.updateDomTimeout);
       const activeIdIndex = this.idList.findIndex((i) => i === this.activeId);
       setTimeout(function () {
         self.changeLeague(activeIdIndex + 1);
-      }, 0.3 * 1000);
+      }, 1 * 1000);
+      wrapper.innerHTML = 'Loading...';
     }
 
     return wrapper;
@@ -483,20 +517,21 @@ Module.register('MMM-SoccerLiveScore', {
     this.tableActive = !this.config.showStandings && this.config.showTables;
     this.scorersActive = !this.config.showStandings && !this.config.showTables && this.config.showScorers;
 
-    if (notification === 'LEAGUES') {
+    if (notification === this.name + '-LEAGUES') {
       this.idList = Object.keys(payload.leaguesList);
       this.leagueIds = payload.leaguesList;
       if (this.idList && this.idList.length > 0) {
         this.changeLeague();
       }
-    } else if (notification === 'STANDINGS') {
+    } else if (notification === this.name + '-STANDINGS') {
       this.standings[payload.leagueId] = payload.standings;
-    } else if (notification === 'TABLE') {
+    } else if (notification === this.name + '-TABLE') {
       this.tables[payload.leagueId] = payload.table;
-    } else if (notification === 'SCORERS') {
+    } else if (notification === this.name + '-SCORERS') {
       this.scorers[payload.leagueId] = payload.scorers;
     } else {
       Log.error(this.name, 'unknown notification', notification, payload);
     }
+    this.updateDom(500)
   },
 });

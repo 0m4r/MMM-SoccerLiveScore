@@ -52,7 +52,8 @@
   display: inline-block;
 }
 
-.MMM-SoccerLiveScore-details {
+.MMM-SoccerLiveScore-details,
+.MMM-SoccerLiveScore-match_info {
   position: relative;
   height: 2ch;
 }

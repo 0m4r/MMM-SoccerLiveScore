@@ -35,21 +35,25 @@ module.exports = NodeHelper.create({
     form: false,
   },
 
+  clearTimeouts: function () {
+    Log.debug(this.name, 'clearTimeouts');
+    [...this.timeoutStandings, ...this.timeoutScorers, ...this.timeoutTable].forEach((id) => clearTimeout(id));
+    this.timeoutStandings.length = 0
+    this.timeoutScorers.length = 0
+    this.timeoutTable.length = 0
+  },
+
   start: function () {
     Log.log('Starting node helper for:', this.name);
   },
 
   stop: function () {
     Log.log('Stopping node helper for:', this.name);
-    [...this.timeoutStandings, ...this.timeoutScorers, ...this.timeoutTable].forEach((id) => clearTimeout(id));
+    this.clearTimeouts()
   },
 
   getLeagueIds: function (leagues) {
-    leagues.forEach((id) => {
-      clearTimeout(this.timeoutStandings[id]);
-      clearTimeout(this.timeoutTable[id]);
-      clearTimeout(this.timeoutScorers[id]);
-    });
+    this.clearTimeouts()
 
     const url = `${this.baseURL}/competitions`;
     Log.debug(this.name, 'getLeagueIds', url);
@@ -75,7 +79,7 @@ module.exports = NodeHelper.create({
             self.showScorers && leaguesList[id].has_scorers && self.getScorers(id);
           });
         }
-        self.sendSocketNotification('LEAGUES', { leaguesList });
+        self.sendSocketNotification(self.name + '-LEAGUES', { leaguesList });
       } else {
         Log.error(this.name, 'getLeagueIds', error);
       }
@@ -96,8 +100,8 @@ module.exports = NodeHelper.create({
         Log.debug(self.name, 'getTable | data', JSON.stringify(data, null, 2));
         self.refreshTime = (data.refresh_time || 5 * 60) * 1000;
         Log.debug(self.name, 'getTable | refresh_time', data.refresh_time, self.refreshTime);
-        const tables = data.data.filter((d) => d.type === 'table');
-        self.sendSocketNotification('TABLE', {
+        const tables = data.data.filter((d) => d.type === 'table' && d.table);
+        self.sendSocketNotification(self.name + '-TABLE', {
           leagueId: leagueId,
           table: tables,
         });
@@ -132,8 +136,12 @@ module.exports = NodeHelper.create({
                 const matches = s.matches;
                 for (let m of matches) {
                   const d = await self.getDetails(leagueId, m.match_id);
-                  details = d.filter(t => t.type === 'details');
+                  const details = d && d.filter(t => t.type === 'details');
+                  Log.debug(self.name, 'getStandings | details', JSON.stringify(details, null, 2));
                   m.details = details && details[0] ? details[0].details : []
+                  const match_info = d && d.filter(t => t.type === 'match_info');
+                  Log.debug(self.name, 'getStandings | match_info', JSON.stringify(match_info, null, 2));
+                  m.match_info = match_info && match_info[0] ? match_info[0].match_info : []
                 };
               }
             };
@@ -141,7 +149,7 @@ module.exports = NodeHelper.create({
         }
 
         forLoop().then(() => {
-          self.sendSocketNotification('STANDINGS', {
+          self.sendSocketNotification(self.name + '-STANDINGS', {
             leagueId: leagueId,
             standings: standings,
           });
@@ -174,8 +182,8 @@ module.exports = NodeHelper.create({
         Log.debug(self.name, 'getScorers | data', JSON.stringify(data, null, 2));
         self.refreshTime = (data.refresh_time || 5 * 60) * 1000;
         Log.debug(self.name, 'getScorers | refresh_time', data.refresh_time, self.refreshTime);
-        const scorers = data.data || [];
-        self.sendSocketNotification('SCORERS', {
+        const scorers = data.data.filter(d => d.type === 'scorers' && d.scorers) || [];
+        self.sendSocketNotification(self.name + '-SCORERS', {
           leagueId: leagueId,
           scorers: scorers,
         });
@@ -202,10 +210,16 @@ module.exports = NodeHelper.create({
     let details = []
     return new Promise((resolve, _reject) => {
       request(options, function (error, _response, body) {
+        let data = null
         if (!error && body) {
-          const data = JSON.parse(body);
-          Log.debug(self.name, 'getDetails | data', JSON.stringify(data, null, 2));
-          details = data.data || [];
+          try {
+            data = JSON.parse(body);
+            Log.debug(self.name, 'getDetails | data', JSON.stringify(data, null, 2));
+            details = data.data || [];
+          } catch (e){
+            Log.error(body);
+            Log.error(e);
+          }
         }
         resolve(details);
       });
@@ -213,11 +227,12 @@ module.exports = NodeHelper.create({
   },
 
   socketNotificationReceived: function (notification, payload) {
-    if (notification === 'CONFIG') {
+    Log.info(this.name, 'socketNotificationReceived', notification, payload)
+    if (notification === this.name + '-CONFIG') {
       this.showStandings = payload.showStandings;
+      this.showDetails = this.showStandings && payload.showDetails;
       this.showTables = payload.showTables;
       this.showScorers = payload.showScorers;
-      this.showDetails = payload.showDetails;
       this.getLeagueIds(payload.leagues);
     }
   },
