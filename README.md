@@ -9,23 +9,26 @@ It displays live scores of your favorite soccer leagues and competitions.
 
 ### Standing
 
-![](screenhosts/MMM-SoccerLiveScores-Standings.png)
+![](screenshots/MMM-SoccerLiveScores-Standings.png)
 
 ### Table
 
-![](screenhosts/MMM-SoccerLiveScores-Tables.png)
+![](screenshots/MMM-SoccerLiveScores-Tables.png)
 
 ### Scorers
 
-![](screenhosts/MMM-SoccerLiveScores-Scorers.png)
+![](screenshots/MMM-SoccerLiveScores-Scorers.png)
 
 ### Standings & Details
 
-![](screenhosts/MMM-SoccerLiveScores-Standings+Details.png)
+![](screenshots/MMM-SoccerLiveScores-Standings+Details.png)
 
 ## Installation
 
 1. Navigate into your MagicMirror's `modules` folder and execute `git clone https://github.com/0m4r/MMM-SoccerLiveScore.git`.
+2. Type `npm ci`
+3. prepare your configuration 
+4. restart your magic mirror
 
 ## Config
 
@@ -37,10 +40,11 @@ The entry in `config.js` can include the following options:
 | `showNames`     | Toggles teams names. <br><br>**Default value:** `true`                                                                                                                                                                                                                                                                                                                     |
 | `showLogos`     | Toggles team logos.<br><br>**Default value:** `true`                                                                                                                                                                                                                                                                                                                       |
 | `displayTime`   | defines how long the information for a league in `leagues` is shown on the screen. This screen time is used to display standings, tables and scorers. For example, if you specify `displayTime` to 30 seconds and `showTables=true`, `showStandings=true`and `showScorers=true` each information will be shown for about 10 seconds. <br><br>**Default value:** 20 \* 1000 |
-| `showStandings` | display the standings for the league <br><br>**Default value:** `true`                                                                                                                                                                                                                                                                                                     |
-| `showDetails`   | display the games scorers whit the standings for the league (it requires `showStandings: true` ) <br><br>**Default value:** `true`                                                                                                                                                                                                                                                                                        |
-| `showTables`    | display the tables for the league (if available) <br><br>**Default value:** `true`                                                                                                                                                                                                                                                                                         |
-| `showScorers`   | display the scorers for the league (if available) <br><br>**Default value:** `true`                                                                                                                                                                                                                                                                                        |
+| `showStandings` | displays the standings for the league <br><br>**Default value:** `true`                                                                                                                                                                                                                                                                                                     |
+| `showDetails`   | displays the games scorers whit the standings for the league (it requires `showStandings: true` ) <br><br>**Default value:** `true`                                                                                                                                                                                                                                                                                        |
+| `showTables`    | displays the tables for the league (if available) <br><br>**Default value:** `true`                                                                                                                                                                                                                                                                                         |
+| `showScorers`   | displays the scorers for the league (if available) <br><br>**Default value:** `true`                                                                                                                                                                                                                                                                                        |
+| `language`      | module display language. Available values are `en`, `de` and, `it` <br><br>**Default value:** `en`                                                                                                                                                                                                                                                                                        |
 
 Here is an example of an entry in `config.js`
 
@@ -57,6 +61,7 @@ Here is an example of an entry in `config.js`
       showStandings: true,
       showTables: true,
       showScorers: true,
+      language: 'en', // supported values are en, de, it
   }
 },
 ```

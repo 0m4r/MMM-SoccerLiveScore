@@ -18,22 +18,18 @@ module.exports = NodeHelper.create({
   showTables: false,
   showScorers: false,
   showDetails: false,
+  language: 'en',
+  supportedLanguages: ['it', 'de', 'en'],
   baseURL: 'https://toralarm.com/api/api',
   requestOptions: {
     method: 'POST',
     gzip: true,
     headers: {
       Host: 'toralarm.com',
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Connection: 'keep-alive',
-      Accept: 'application/json, text/plain, */*',
-      'User-Agent': 'TorAlarm/20161202 CFNetwork/808.1.4 Darwin/16.1.0',
-      'Accept-Language': 'en-US,en;q=0.9,it;q=0.8,de-DE;q=0.7,de;q=0.6',
-      'Accept-Encoding': 'gzip, deflate, br',
-      'Content-Length': '12',
+      'accept-language': 'en-US,en;q=0.9,it;q=0.8,de-DE;q=0.7,de;q=0.6',
+      'content-type': 'application/json;charset=UTF-8',
     },
-    body: JSON.stringify({ lng: 'en-US' }),
-    form: false,
+    body: JSON.stringify({ lng: 'en' }),
   },
 
   clearTimeouts: function () {
@@ -57,7 +53,11 @@ module.exports = NodeHelper.create({
     this.clearTimeouts()
     const url = new URL(`${this.baseURL}/competitions`)
     Log.debug(this.name, 'getLeagueIds', url);
-    const resp = await fetch(url, this.requestOptions)
+    const options = {
+      ...this.requestOptions,
+      body: JSON.stringify({ lng: this.language })
+    }
+    const resp = await fetch(url, options)
     if (resp.status === 200) {
       const data = await resp.json();
       const leaguesList = {};
@@ -84,7 +84,11 @@ module.exports = NodeHelper.create({
   getTable: async function (leagueId) {
     const url = new URL(`${this.baseURL}/competitions/${leagueId.toString()}/table`);
     Log.debug(this.name, 'getTable', url);
-    const resp = await fetch(url, this.requestOptions)
+    const options = {
+      ...this.requestOptions,
+      body: JSON.stringify({ lng: this.language })
+    }
+    const resp = await fetch(url, options)
 
     if (resp.status === 200) {
       const data = await resp.json();
@@ -108,7 +112,11 @@ module.exports = NodeHelper.create({
     const url = new URL(`${this.baseURL}/competitions/${leagueId.toString()}/matches/round/0`);
     Log.debug(this.name, 'getStandings', url);
 
-    const resp = await fetch(url, this.requestOptions)
+    const options = {
+      ...this.requestOptions,
+      body: JSON.stringify({ lng: this.language })
+    }
+    const resp = await fetch(url, options)
     if (resp.status === 200) {
       const data = await resp.json();
       Log.debug(this.name, 'getStandings | data', JSON.stringify(data, null, 2));
@@ -196,7 +204,11 @@ module.exports = NodeHelper.create({
     const url = new URL(`${this.baseURL}/competitions/${leagueId.toString()}/scorers`);
     Log.debug(this.name, 'getScorers', url);
 
-    const resp = await fetch(url, this.requestOptions);
+    const options = {
+      ...this.requestOptions,
+      body: JSON.stringify({ lng: this.language })
+    }
+    const resp = await fetch(url, options)
     if (resp.status === 200) {
       const data = await resp.json();
       Log.debug(this.name, 'getScorers | data', JSON.stringify(data, null, 2));
@@ -224,7 +236,11 @@ module.exports = NodeHelper.create({
 
     let details = []
     return new Promise(async (resolve, _reject) => {
-      const resp = await fetch(url, this.requestOptions);
+      const options = {
+        ...this.requestOptions,
+        body: JSON.stringify({ lng: this.language })
+      }
+      const resp = await fetch(url, options)
       if (resp.status === 200) {
         let data = null
         try {
@@ -243,12 +259,15 @@ module.exports = NodeHelper.create({
   },
 
   socketNotificationReceived: function (notification, payload) {
-    Log.debug(this.name, 'socketNotificationReceived', notification, payload)
+    Log.info(this.name, 'socketNotificationReceived', notification, payload)
     if (notification === this.name + '-CONFIG') {
       this.showStandings = payload.showStandings;
       this.showDetails = this.showStandings && payload.showDetails;
       this.showTables = payload.showTables;
       this.showScorers = payload.showScorers;
+      if (payload.language) {
+        this.language = this.supportedLanguages.includes(payload.language) ? payload.language : 'en'
+      }
       this.getLeagueIds(payload.leagues);
     }
   },
