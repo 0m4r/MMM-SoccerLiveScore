@@ -5,7 +5,7 @@
   color: var(--color-text);
 }
 
-.MMM-SoccerLiveScore-wrapper {
+.MMM-SoccerLiveScore-outer-wrapper {
   overflow: hidden;
 }
 
@@ -101,8 +101,8 @@
   z-index: -1;
 }
 
-.MMM-SoccerLiveScore-vertical-infinite-scroll table {
-  animation: MMMSoccerLiveScoreScrollTop 10s infinite linear;
+.MMM-SoccerLiveScore-vertical-infinite-scroll .MMM-SoccerLiveScore-inner-wrapper {
+  animation: MMMSoccerLiveScoreScrollTop 10s ease-in-out infinite alternate;
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   white-space: nowrap;
@@ -118,7 +118,7 @@
 
 @keyframes MMMSoccerLiveScoreScrollLeft {
   to {
-    transform: translateX(-200%);
+    transform: translateX(-100%);
   }
 }
 
@@ -126,14 +126,23 @@
   0% {
     transform: translateY(0%);
   }
-  20% {
+  10% {
     transform: translateY(0%);
   }
-  50% {
-    transform: translateY(-50%);
+  20% {
+    transform: translateY(-40%);
+  }
+  40% {
+    transform: translateY(-80%);
+  }
+  60% {
+    transform: translateY(-60%);
   }
   80% {
-    transform: translateY(-50%);
+    transform: translateY(-30%);
+  }
+  90% {
+    transform: translateY(0%);
   }
   100% {
     transform: translateY(0%);

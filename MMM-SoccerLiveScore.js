@@ -103,7 +103,11 @@ Module.register('MMM-SoccerLiveScore', {
     Log.debug(this.name, 'getDom', this.activeId);
     clearTimeout(this.updateDomTimeout);
     const self = this;
+    const outerWrapper = document.createElement('div');
     const wrapper = document.createElement('div');
+    outerWrapper.appendChild(wrapper);
+    outerWrapper.classList.add('MMM-SoccerLiveScore-outer-wrapper');
+    wrapper.classList.add('MMM-SoccerLiveScore-inner-wrapper');
 
     if (!this.activeId || this.idList.length === 0 || !this.idList.includes(this.activeId)) {
       wrapper.innerHTML = 'Loading...';
@@ -229,7 +233,8 @@ Module.register('MMM-SoccerLiveScore', {
                 const p = document.createElement('p');
                 p.classList.add('MMM-SoccerLiveScore-horizontal-infinite-scroll');
                 p.style.animationDelay = -1 * (activeMatch.details.length || 1) * 0.1 + 's';
-                p.style.animationDuration = this.config.displayTime + 'ms';
+                // p.style.animationDuration = this.config.displayTime + 'ms';
+                p.style.animationDuration = (parseFloat(this.config.displayTime) > 20 * 1000 ? 20 * 1000 : this.config.displayTime) + 'ms';
                 activeMatch.details.forEach((d) => {
                   const span = document.createElement('span')
                   if (d.type === 1) {
@@ -260,7 +265,7 @@ Module.register('MMM-SoccerLiveScore', {
                 const p = document.createElement('p');
                 p.classList.add('MMM-SoccerLiveScore-horizontal-infinite-scroll');
                 p.style.animationDelay = -1 * activeMatch.match_info.info_items.length * 0.1 + 's';
-                p.style.animationDuration = this.config.displayTime + 'ms';
+                p.style.animationDuration = (parseFloat(this.config.displayTime) > 20 * 1000 ? 20 * 1000 : this.config.displayTime) + 'ms';
                 activeMatch.match_info.info_items.forEach(it => {
                   if (it.info_type === 'venue') {
                     const i = document.createElement('i')
@@ -292,7 +297,6 @@ Module.register('MMM-SoccerLiveScore', {
       td.innerHTML = 'Next API request: ' + nextRequest
       tr.appendChild(td)
       matches.appendChild(tr);
-      console.log(matches)
 
       this.standingActive = (!hasTablesToShow && !hasScorersToShow) || false;
       this.tableActive = hasTablesToShow;
@@ -528,12 +532,11 @@ Module.register('MMM-SoccerLiveScore', {
 
     setTimeout(() => {
       if (window.innerHeight < wrapper.getBoundingClientRect().height + wrapper.getBoundingClientRect().top) {
-        wrapper.classList.add('MMM-SoccerLiveScore-wrapper');
-        wrapper.classList.add('MMM-SoccerLiveScore-vertical-infinite-scroll');
+        outerWrapper.classList.add('MMM-SoccerLiveScore-vertical-infinite-scroll');
       }
     }, 200);
 
-    return wrapper;
+    return outerWrapper;
   },
 
   socketNotificationReceived: function (notification, payload) {
