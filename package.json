@@ -31,9 +31,8 @@
   ],
   "devDependencies": {
     "eslint": "^7.21.0",
-    "eslint-config-prettier": "^8.1.0"
+    "eslint-config-prettier": "^8.1.0",
+    "node-fetch": "^v2.6.1"
   },
-  "dependencies": {
-    "request": "^2.88.2"
-  }
+  "dependencies": {}
 }
