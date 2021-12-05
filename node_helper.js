@@ -49,18 +49,32 @@ module.exports = NodeHelper.create({
     this.clearTimeouts()
   },
 
-  getLeagueIds: async function (leagues) {
-    this.clearTimeouts()
-    const url = new URL(`${this.baseURL}/competitions`)
-    Log.debug(this.name, 'getLeagueIds', url);
-    const options = {
+  doPost: async function (url, options) {
+    let data;
+    const localUrl = new URL(url);
+    const localOptions = {
       ...this.requestOptions,
+      ...options,
       body: JSON.stringify({ lng: this.language })
     }
-    const resp = await fetch(url, options)
+    Log.debug(this.name, 'doPost', localUrl, localOptions);
+    const resp = await fetch(url, localOptions)
     if (resp.status === 200) {
-      const data = await resp.json();
-      const leaguesList = {};
+      data = await resp.json();
+    } else {
+      Log.error(this.name, 'doPost', localUrl, localOptions, resp);
+      data = null
+    }
+    return data
+  },
+
+  getLeagueIds: async function (leagues) {
+    this.clearTimeouts()
+    const url = `${this.baseURL}/competitions`;
+    Log.debug(this.name, 'getLeagueIds', url);
+    const data = await this.doPost(url)
+    const leaguesList = {};
+    if (data) {
       if ('competitions' in data) {
         const competitions = data.competitions;
         leagues.forEach((l) => {
@@ -75,23 +89,15 @@ module.exports = NodeHelper.create({
           this.showScorers && leaguesList[id].has_scorers && this.getScorers(id);
         });
       }
-      this.sendSocketNotification(this.name + '-LEAGUES', { leaguesList });
-    } else {
-      Log.error(this.name, 'getLeagueIds', resp);
     }
+    this.sendSocketNotification(this.name + '-LEAGUES', { leaguesList });
   },
 
   getTable: async function (leagueId) {
-    const url = new URL(`${this.baseURL}/competitions/${leagueId.toString()}/table`);
+    const url = `${this.baseURL}/competitions/${leagueId.toString()}/table`;
     Log.debug(this.name, 'getTable', url);
-    const options = {
-      ...this.requestOptions,
-      body: JSON.stringify({ lng: this.language })
-    }
-    const resp = await fetch(url, options)
-
-    if (resp.status === 200) {
-      const data = await resp.json();
+    const data = await this.doPost(url)
+    if (data) {
       Log.debug(this.name, 'getTable | data', JSON.stringify(data, null, 2));
       this.refreshTime = (data.refresh_time || 5 * 60) * 1000;
       Log.debug(this.name, 'getTable | refresh_time', data.refresh_time, this.refreshTime);
@@ -103,22 +109,15 @@ module.exports = NodeHelper.create({
       this.timeoutTable[leagueId] = setTimeout(() => {
         this.getTable(leagueId);
       }, this.refreshTime);
-    } else {
-      Log.error(this.name, 'getTable', resp);
     }
   },
 
   getStandings: async function (leagueId) {
-    const url = new URL(`${this.baseURL}/competitions/${leagueId.toString()}/matches/round/0`);
+    const url = `${this.baseURL}/competitions/${leagueId.toString()}/matches/round/0`;
     Log.debug(this.name, 'getStandings', url);
 
-    const options = {
-      ...this.requestOptions,
-      body: JSON.stringify({ lng: this.language })
-    }
-    const resp = await fetch(url, options)
-    if (resp.status === 200) {
-      const data = await resp.json();
+    const data = await this.doPost(url)
+    if (data) {
       Log.debug(this.name, 'getStandings | data', JSON.stringify(data, null, 2));
       this.refreshTime = (data.refresh_time || 5 * 60) * 1000;
       Log.debug(this.name, 'getStandings | refresh_time', data.refresh_time, this.refreshTime);
@@ -201,16 +200,11 @@ module.exports = NodeHelper.create({
   },
 
   getScorers: async function (leagueId) {
-    const url = new URL(`${this.baseURL}/competitions/${leagueId.toString()}/scorers`);
+    const url = `${this.baseURL}/competitions/${leagueId.toString()}/scorers`;
     Log.debug(this.name, 'getScorers', url);
 
-    const options = {
-      ...this.requestOptions,
-      body: JSON.stringify({ lng: this.language })
-    }
-    const resp = await fetch(url, options)
-    if (resp.status === 200) {
-      const data = await resp.json();
+    const data = await this.doPost(url)
+    if (data) {
       Log.debug(this.name, 'getScorers | data', JSON.stringify(data, null, 2));
       this.refreshTime = (data.refresh_time || 5 * 60) * 1000;
       Log.debug(this.name, 'getScorers | refresh_time', data.refresh_time, this.refreshTime);
@@ -231,26 +225,15 @@ module.exports = NodeHelper.create({
   },
 
   getDetails: async function (leagueId, matchId) {
-    const url = new URL(`${this.baseURL}/competitions/${leagueId.toString()}/matches/${matchId.toString()}/details`);
+    const url = `${this.baseURL}/competitions/${leagueId.toString()}/matches/${matchId.toString()}/details`;
     Log.debug(this.name, 'getDetails', url);
 
     let details = []
     return new Promise(async (resolve, _reject) => {
-      const options = {
-        ...this.requestOptions,
-        body: JSON.stringify({ lng: this.language })
-      }
-      const resp = await fetch(url, options)
-      if (resp.status === 200) {
-        let data = null
-        try {
-          data = await resp.json();
-          Log.debug(this.name, 'getDetails | data', JSON.stringify(data, null, 2));
-          details = data.data || [];
-        } catch (e) {
-          Log.error(this.name, 'getDetails', resp);
-          Log.error(this.name, 'getDetails', e);
-        }
+      const data = await this.doPost(url)
+      if (data) {
+        Log.debug(this.name, 'getDetails | data', JSON.stringify(data, null, 2));
+        details = data.data || [];
         resolve(details);
       } else {
         Log.error(this.name, 'getDetails', resp);
