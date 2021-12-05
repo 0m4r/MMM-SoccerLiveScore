@@ -236,6 +236,7 @@ module.exports = NodeHelper.create({
         details = data.data || [];
         resolve(details);
       } else {
+        resolve([]);
         Log.error(this.name, 'getDetails', resp);
       }
     });
