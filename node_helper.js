@@ -163,7 +163,7 @@ module.exports = NodeHelper.create({
       }
       this.timeoutStandings[leagueId] = setTimeout(() => {
         this.getStandings(leagueId);
-      }, refreshTimeout);
+      }, refreshTimeout > Number.MAX_SAFE_INTEGER ? Number.MAX_SAFE_INTEGER : refreshTimeout);
 
       Log.info(this.name, `next request for league "${this.leaguesList[leagueId].name} (${leagueId})" on ${nextRequest} for ${round_title}`)
 
