@@ -161,9 +161,11 @@ module.exports = NodeHelper.create({
         nextRequest = new Date((now + deltaNowNextRequest) * 1000)
         refreshTimeout = deltaNowNextRequest * 1000;
       }
+      const MAX_TIMEOUT_VALUE = 2147483647
+      refreshTimeout = refreshTimeout > MAX_TIMEOUT_VALUE ? MAX_TIMEOUT_VALUE : refreshTimeout
       this.timeoutStandings[leagueId] = setTimeout(() => {
         this.getStandings(leagueId);
-      }, refreshTimeout > Number.MAX_SAFE_INTEGER ? Number.MAX_SAFE_INTEGER : refreshTimeout);
+      }, refreshTimeout);
 
       Log.info(this.name, `next request for league "${this.leaguesList[leagueId].name} (${leagueId})" on ${nextRequest} for ${round_title}`)
 
