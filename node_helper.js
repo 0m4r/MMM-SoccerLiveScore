@@ -31,6 +31,7 @@ module.exports = NodeHelper.create({
     },
     body: JSON.stringify({ lng: 'en' }),
   },
+  leaguesList: {},
 
   clearTimeouts: function () {
     Log.debug(this.name, 'clearTimeouts');
@@ -73,24 +74,24 @@ module.exports = NodeHelper.create({
     const url = `${this.baseURL}/competitions`;
     Log.debug(this.name, 'getLeagueIds', url);
     const data = await this.doPost(url)
-    const leaguesList = {};
+    this.leaguesList = {};
     if (data) {
       if ('competitions' in data) {
         const competitions = data.competitions;
         leagues.forEach((l) => {
           const comp = competitions.find((c) => 'id' in c && c.id === l);
           if (comp && 'id' in comp) {
-            leaguesList[comp.id] = comp;
+            this.leaguesList[comp.id] = comp;
           }
         });
-        Object.keys(leaguesList).forEach((id) => {
+        Object.keys(this.leaguesList).forEach((id) => {
           this.showStandings && this.getStandings(id);
-          this.showTables && leaguesList[id].has_table && this.getTable(id);
-          this.showScorers && leaguesList[id].has_scorers && this.getScorers(id);
+          this.showTables && this.leaguesList[id].has_table && this.getTable(id);
+          this.showScorers && this.leaguesList[id].has_scorers && this.getScorers(id);
         });
       }
     }
-    this.sendSocketNotification(this.name + '-LEAGUES', { leaguesList });
+    this.sendSocketNotification(this.name + '-LEAGUES', { leaguesList: this.leaguesList });
   },
 
   getTable: async function (leagueId) {
@@ -118,46 +119,53 @@ module.exports = NodeHelper.create({
 
     const data = await this.doPost(url)
     if (data) {
-      Log.debug(this.name, 'getStandings | data', JSON.stringify(data, null, 2));
-      this.refreshTime = (data.refresh_time || 5 * 60) * 1000;
-      Log.debug(this.name, 'getStandings | refresh_time', data.refresh_time, this.refreshTime);
       const standings = data;
+      Log.debug(this.name, 'getStandings | data', JSON.stringify(data, null, 2));
+      this.refreshTime = (standings.refresh_time || 5 * 60) * 1000;
+      Log.debug(this.name, 'getStandings | refresh_time', data.refresh_time, this.refreshTime);
 
-      let refreshTimeout = this.refreshTime;
-
-      const current_round = data.current_round;
       const fiveMinutes = 60 * 5
+
+      const current_round = standings.current_round;
+
       const rounds_detailed = data.rounds_detailed[current_round - 1]
+      const now = parseInt(Date.now() / 1000)
+
       const start = rounds_detailed.schedule_start - fiveMinutes
       const end = rounds_detailed.schedule_end + fiveMinutes
-      const now = parseInt(Date.now() / 1000)
       const deltaNowStart = start - now;
+
       const round_title = rounds_detailed.round_title
+
+      const selectable_rounds = standings.selectable_rounds;
+      let next_round = current_round
+      let next_start = start;
+      if (next_round <= selectable_rounds) {
+        next_round = parseInt(current_round) + 1;
+        next_start = data.rounds_detailed[current_round].schedule_start - fiveMinutes
+      }
+      const deltaNowNextRequest = next_start - now;
+
       let nextRequest = null
 
+      let refreshTimeout = this.refreshTime;
       // now is in between the start and the end time of the event
       if (now >= start && end > 0 && now <= end) {
-        Log.debug(this.name, 'start now end', new Date(start * 1000), new Date(now * 1000), new Date(end * 1000))
-        this.timeoutStandings[leagueId] = setTimeout(() => {
-          this.getStandings(leagueId);
-        }, refreshTimeout);
-        Log.info(this.name, `next request for league id ${leagueId} on ${new Date((now * 1000 + refreshTimeout))} for ${round_title}`)
         nextRequest = new Date((now * 1000 + refreshTimeout));
         // now is before the start of the event
       } else if (now < start) {
-        refreshTimeout = deltaNowStart;
-        this.timeoutStandings[leagueId] = setTimeout(() => {
-          this.getStandings(leagueId);
-        }, refreshTimeout);
-        Log.info(this.name, `next request for league id ${leagueId} on ${new Date(start * 1000)} for ${round_title}`)
+        refreshTimeout = deltaNowStart * 1000;
         nextRequest = new Date(start * 1000);
         // now is past the end of the event
       } else if (now > end) {
-        Log.debug(this.name, 'now > end', new Date(now * 1000), end > 0 ? new Date(end * 1000) : 0)
-        nextRequest = new Date(end * 1000);
+        nextRequest = new Date((now + deltaNowNextRequest) * 1000)
+        refreshTimeout = deltaNowNextRequest * 1000;
       }
-      Log.info(this.name, 'getStandings | nextRequest ', leagueId, round_title, nextRequest, new Date(end * 1000));
-      Log.info(this.name, 'getStandings | refreshTimeout ', leagueId, round_title, refreshTimeout);
+      this.timeoutStandings[leagueId] = setTimeout(() => {
+        this.getStandings(leagueId);
+      }, refreshTimeout);
+
+      Log.info(this.name, `next request for league "${this.leaguesList[leagueId].name} (${leagueId})" on ${nextRequest} for ${round_title}`)
 
 
       const doRequest = () => {
