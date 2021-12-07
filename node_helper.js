@@ -202,7 +202,7 @@ module.exports = NodeHelper.create({
       doRequest();
 
     } else {
-      Log.error(this.name, 'getStandings', resp);
+      Log.error(this.name, 'getStandings', data);
       this.timeoutStandings[leagueId] = setTimeout(() => {
         this.getStandings(leagueId);
       }, 5 * 60 * 1000);
@@ -227,7 +227,7 @@ module.exports = NodeHelper.create({
         this.getScorers(leagueId);
       }, this.refreshTime);
     } else {
-      Log.error(this.name, 'getScorers', resp);
+      Log.error(this.name, 'getScorers', data);
       this.timeoutScorers[leagueId] = setTimeout(() => {
         this.getScorers(leagueId);
       }, 5 * 60 * 1000);
@@ -247,7 +247,7 @@ module.exports = NodeHelper.create({
         resolve(details);
       } else {
         resolve([]);
-        Log.error(this.name, 'getDetails', resp);
+        Log.error(this.name, 'getDetails', data);
       }
     });
   },
