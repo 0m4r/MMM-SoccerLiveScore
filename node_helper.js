@@ -125,48 +125,51 @@ module.exports = NodeHelper.create({
       Log.debug(this.name, 'getStandings | refresh_time', data.refresh_time, this.refreshTime);
 
       const fiveMinutes = 60 * 5
-
       const current_round = standings.current_round;
-
       const rounds_detailed = data.rounds_detailed[current_round - 1]
       const now = parseInt(Date.now() / 1000)
-
-      const start = rounds_detailed.schedule_start - fiveMinutes
-      const end = rounds_detailed.schedule_end + fiveMinutes
-      const deltaNowStart = start - now;
-
-      const round_title = rounds_detailed.round_title
-
-      const selectable_rounds = standings.selectable_rounds;
-      let next_round = current_round
-      let next_start = start;
-      if (next_round <= selectable_rounds) {
-        next_round = parseInt(current_round) + 1;
-        next_start = data.rounds_detailed[current_round].schedule_start - fiveMinutes
-      }
-      const deltaNowNextRequest = next_start - now;
-
       let nextRequest = null
 
       let refreshTimeout = this.refreshTime;
-      // now is in between the start and the end time of the event
-      if (now >= start && end > 0 && now <= end) {
+      if (rounds_detailed.schedule_start === 0 && rounds_detailed.schedule_end === 0) {
+        refreshTimeout = 24 * 12 * fiveMinutes;
         nextRequest = new Date((now * 1000 + refreshTimeout));
+      } else {
+        const start = rounds_detailed.schedule_start - fiveMinutes;
+        const end = rounds_detailed.schedule_end + fiveMinutes;
+
+        const selectable_rounds = standings.selectable_rounds;
+        let next_round = current_round
+        let next_start = start;
+
+        if (next_round <= selectable_rounds) {
+          next_round = parseInt(current_round) + 1;
+          next_start = data.rounds_detailed[current_round].schedule_start - fiveMinutes
+        }
+        const deltaNowNextRequest = next_start - now;
+
+        // now is in between the start and the end time of the event
+        if (now >= start && end > 0 && now <= end) {
+          nextRequest = new Date((now * 1000 + refreshTimeout));
         // now is before the start of the event
-      } else if (now < start) {
-        refreshTimeout = deltaNowStart * 1000;
-        nextRequest = new Date(start * 1000);
-        // now is past the end of the event
-      } else if (now > end) {
-        nextRequest = new Date((now + deltaNowNextRequest) * 1000)
-        refreshTimeout = deltaNowNextRequest * 1000;
+        } else if (now < start) {
+          const deltaNowStart = start - now;
+          refreshTimeout = deltaNowStart * 1000;
+          nextRequest = new Date(start * 1000);
+          // now is past the end of the event
+        } else if (now > end) {
+          nextRequest = new Date((now + deltaNowNextRequest) * 1000)
+          refreshTimeout = deltaNowNextRequest * 1000;
+        }
       }
+      
       const MAX_TIMEOUT_VALUE = 2147483647
       refreshTimeout = refreshTimeout > MAX_TIMEOUT_VALUE ? MAX_TIMEOUT_VALUE : refreshTimeout
       this.timeoutStandings[leagueId] = setTimeout(() => {
         this.getStandings(leagueId);
       }, refreshTimeout);
 
+      const round_title = rounds_detailed.round_title
       Log.info(this.name, `next request for league "${this.leaguesList[leagueId].name} (${leagueId})" on ${nextRequest} for ${round_title}`)
 
 
