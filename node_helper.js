@@ -132,8 +132,8 @@ module.exports = NodeHelper.create({
 
       let refreshTimeout = this.refreshTime;
 
-      console.log('----> schedule_start', rounds_detailed.schedule_start)
-      console.log('----> schedule_end', rounds_detailed.schedule_end)
+      console.log('----> schedule_start', rounds_detailed.schedule_start, new Date(rounds_detailed.schedule_start * 1000).toISOString())
+      console.log('----> schedule_end', rounds_detailed.schedule_end, new Date(rounds_detailed.schedule_end * 1000).toISOString())
       
       if (!rounds_detailed.schedule_start && !rounds_detailed.schedule_end) {
         refreshTimeout = 24 * 12 * fiveMinutes;
