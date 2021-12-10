@@ -151,13 +151,15 @@ module.exports = NodeHelper.create({
         } else if (now > end) {
           const selectable_rounds = standings.selectable_rounds;
           let next_round = current_round;
-          let next_start = 24 * 12 * fiveMinutes;
+          let next_start = now + 24 * 12 * fiveMinutes;
           let deltaNowNextRequest = next_start * 1000
 
           if (next_round <= selectable_rounds) {
             next_round = parseInt(current_round) + 1;
-            next_start = data.rounds_detailed[current_round].schedule_start - fiveMinutes
-            deltaNowNextRequest = next_start * 1000
+            if(data.rounds_detailed[current_round].schedule_start !== 0) {
+              next_start = data.rounds_detailed[current_round].schedule_start - fiveMinutes
+              deltaNowNextRequest = next_start * 1000
+            }            
           }
           
           nextRequest = new Date(deltaNowNextRequest)
