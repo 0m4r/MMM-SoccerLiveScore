@@ -150,17 +150,18 @@ module.exports = NodeHelper.create({
           // now is past the end of the event
         } else if (now > end) {
           const selectable_rounds = standings.selectable_rounds;
-          let next_round = current_round
-          let next_start = start;
+          let next_round = current_round;
+          let next_start = 24 * 12 * fiveMinutes;
+          let deltaNowNextRequest = next_start * 1000
 
           if (next_round <= selectable_rounds) {
             next_round = parseInt(current_round) + 1;
-            next_start = data.rounds_detailed[current_round].schedule_start > 0 ? data.rounds_detailed[current_round].schedule_start - fiveMinutes : 25 * 12 * fiveMinutes;
+            next_start = data.rounds_detailed[current_round].schedule_start - fiveMinutes
+            deltaNowNextRequest = next_start * 1000
           }
-          const deltaNowNextRequest = next_start - now;
           
-          nextRequest = new Date((now + deltaNowNextRequest) * 1000)
-          refreshTimeout = deltaNowNextRequest * 1000;
+          nextRequest = new Date(deltaNowNextRequest)
+          refreshTimeout = deltaNowNextRequest;
         }
       }
       
