@@ -131,9 +131,6 @@ module.exports = NodeHelper.create({
       let nextRequest = null
 
       let refreshTimeout = this.refreshTime;
-
-      console.log('----> schedule_start', rounds_detailed.schedule_start, new Date(rounds_detailed.schedule_start * 1000).toISOString())
-      console.log('----> schedule_end', rounds_detailed.schedule_end, new Date(rounds_detailed.schedule_end * 1000).toISOString())
       
       if (!rounds_detailed.schedule_start && !rounds_detailed.schedule_end) {
         refreshTimeout = 24 * 12 * fiveMinutes;
@@ -141,16 +138,6 @@ module.exports = NodeHelper.create({
       } else {
         const start = rounds_detailed.schedule_start - fiveMinutes;
         const end = rounds_detailed.schedule_end + fiveMinutes;
-
-        const selectable_rounds = standings.selectable_rounds;
-        let next_round = current_round
-        let next_start = start;
-
-        if (next_round <= selectable_rounds) {
-          next_round = parseInt(current_round) + 1;
-          next_start = data.rounds_detailed[current_round].schedule_start - fiveMinutes
-        }
-        const deltaNowNextRequest = next_start - now;
 
         // now is in between the start and the end time of the event
         if (now >= start && end > 0 && now <= end) {
@@ -162,6 +149,16 @@ module.exports = NodeHelper.create({
           nextRequest = new Date(start * 1000);
           // now is past the end of the event
         } else if (now > end) {
+          const selectable_rounds = standings.selectable_rounds;
+          let next_round = current_round
+          let next_start = start;
+
+          if (next_round <= selectable_rounds) {
+            next_round = parseInt(current_round) + 1;
+            next_start = data.rounds_detailed[current_round].schedule_start > 0 ? data.rounds_detailed[current_round].schedule_start - fiveMinutes : 25 * 12 * fiveMinutes;
+          }
+          const deltaNowNextRequest = next_start - now;
+          
           nextRequest = new Date((now + deltaNowNextRequest) * 1000)
           refreshTimeout = deltaNowNextRequest * 1000;
         }
