@@ -1,3 +1,6 @@
+:root {
+  --vertical-animation-offset: 100%;
+}
 .MMM-SoccerLiveScore__api-info {
   font-size: 10px;
   text-align: right;
@@ -102,12 +105,13 @@
 }
 
 .MMM-SoccerLiveScore-vertical-infinite-scroll .MMM-SoccerLiveScore-inner-wrapper {
-  animation: MMMSoccerLiveScoreScrollTop 10s ease-in-out infinite alternate;
+  animation: MMMSoccerLiveScoreScrollTop 30s linear infinite alternate;
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   white-space: nowrap;
   overflow: hidden;
   z-index: 0;
+  padding-top: 0%;
 }
 
 .MMM-SoccerLiveScore-vertical-infinite-scroll header {
@@ -123,29 +127,8 @@
 }
 
 @keyframes MMMSoccerLiveScoreScrollTop {
-  0% {
-    transform: translateY(0%);
-  }
-  10% {
-    transform: translateY(0%);
-  }
-  20% {
-    transform: translateY(-40%);
-  }
-  40% {
-    transform: translateY(-80%);
-  }
-  60% {
-    transform: translateY(-60%);
-  }
-  80% {
-    transform: translateY(-30%);
-  }
-  90% {
-    transform: translateY(0%);
-  }
-  100% {
-    transform: translateY(0%);
+  to {
+    transform: translateY(var(--vertical-animation-offset, -100%));
   }
 }
 

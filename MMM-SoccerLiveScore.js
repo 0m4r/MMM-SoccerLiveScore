@@ -531,10 +531,15 @@ Module.register('MMM-SoccerLiveScore', {
     }
 
     setTimeout(() => {
-      if (window.innerHeight < wrapper.getBoundingClientRect().height + wrapper.getBoundingClientRect().top) {
+      const rect = outerWrapper.getBoundingClientRect();
+      const top = rect.height + rect.top;
+      if (window.innerHeight < top) {
+        var r = document.querySelector(':root');
+        const offset = window.innerHeight - top;
+        r.style.setProperty('--vertical-animation-offset', parseInt(offset * 1.01) + 'px');
         outerWrapper.classList.add('MMM-SoccerLiveScore-vertical-infinite-scroll');
       }
-    }, 200);
+    }, 500);
 
     return outerWrapper;
   },
