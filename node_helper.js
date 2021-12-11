@@ -120,6 +120,11 @@ module.exports = NodeHelper.create({
     const data = await this.doPost(url)
     if (data) {
       const standings = data;
+
+      const matches = standings.data.filter(s => s.type === 'matches')
+      const times = [...new Set(matches.map(m => m.time))].sort()
+      times.forEach(t => console.log(new Date(t * 1000).toISOString()));
+
       Log.debug(this.name, 'getStandings | data', JSON.stringify(data, null, 2));
       this.refreshTime = (standings.refresh_time || 5 * 60) * 1000;
       Log.debug(this.name, 'getStandings | refresh_time', data.refresh_time, this.refreshTime);
@@ -131,18 +136,18 @@ module.exports = NodeHelper.create({
       let nextRequest = null
 
       let refreshTimeout = this.refreshTime;
-      
+
       if (!rounds_detailed.schedule_start && !rounds_detailed.schedule_end) {
         refreshTimeout = 24 * 12 * fiveMinutes;
         nextRequest = new Date((now * 1000 + refreshTimeout));
       } else {
-        const start = rounds_detailed.schedule_start - fiveMinutes;
-        const end = rounds_detailed.schedule_end + fiveMinutes;
+        const start = times.reduce((prev, curr) => (Math.abs(curr - now) < Math.abs(prev - now) ? curr : prev)) - fiveMinutes
+        const end = times[times.length - 1] + fiveMinutes
 
         // now is in between the start and the end time of the event
         if (now >= start && end > 0 && now <= end) {
           nextRequest = new Date((now * 1000 + refreshTimeout));
-        // now is before the start of the event
+          // now is before the start of the event
         } else if (now < start) {
           const deltaNowStart = start - now;
           refreshTimeout = deltaNowStart * 1000;
@@ -156,17 +161,17 @@ module.exports = NodeHelper.create({
 
           if (next_round <= selectable_rounds) {
             next_round = parseInt(current_round) + 1;
-            if(data.rounds_detailed[current_round].schedule_start !== 0) {
+            if (data.rounds_detailed[current_round].schedule_start !== 0) {
               next_start = data.rounds_detailed[current_round].schedule_start - fiveMinutes
               deltaNowNextRequest = next_start * 1000
-            }            
+            }
           }
-          
+
           nextRequest = new Date(deltaNowNextRequest)
           refreshTimeout = deltaNowNextRequest;
         }
       }
-      
+
       const MAX_TIMEOUT_VALUE = 2147483647
       refreshTimeout = refreshTimeout > MAX_TIMEOUT_VALUE ? MAX_TIMEOUT_VALUE : refreshTimeout
       this.timeoutStandings[leagueId] = setTimeout(() => {
@@ -260,7 +265,7 @@ module.exports = NodeHelper.create({
   },
 
   socketNotificationReceived: function (notification, payload) {
-    Log.info(this.name, 'socketNotificationReceived', notification, payload)
+    Log.debug(this.name, 'socketNotificationReceived', notification, payload)
     if (notification === this.name + '-CONFIG') {
       this.showStandings = payload.showStandings;
       this.showDetails = this.showStandings && payload.showDetails;
