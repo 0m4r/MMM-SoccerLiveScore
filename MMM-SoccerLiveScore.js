@@ -31,10 +31,6 @@ Module.register('MMM-SoccerLiveScore', {
     logosToInvert: [30001132, 30000991, 30000145], // Juventus team_id in 1, 23, and 328 leagues
   },
 
-  getScripts: function () {
-    return ['moment.js'];
-  },
-
   getStyles: function () {
     return ['font-awesome.css', 'MMM-SoccerLiveScore.css'];
   },
@@ -121,6 +117,15 @@ Module.register('MMM-SoccerLiveScore', {
     const hasStandingsToShow = this.config.showStandings === true && standing && Object.keys(standing).length > 0;
     const hasTablesToShow = (this.leagueIds[this.activeId].has_table && this.config.showTables) === true && Array.isArray(tables) && tables.length > 0;
     const hasScorersToShow = (this.leagueIds[this.activeId].has_scorers && this.config.showScorers) === true && Array.isArray(scorers) && scorers.length > 0
+    const formatDate = time => {
+      const d = new Date(time)
+      const month = d.getMonth() + 1;
+      const day = d.getDate();
+      const hours = d.getHours();
+      const minutes = d.getMinutes();
+      return `${day < 10 ? '0' + day : day}.${month < 10 ? '0' + month : month} ${hours < 10 ? '0' + hours : hours}:${minutes < 10 ? '0' + minutes : minutes}`
+
+    }
 
     let nextRequest = null;
     if (this.nextRequest[this.activeId]) {
@@ -146,7 +151,8 @@ Module.register('MMM-SoccerLiveScore', {
         if (activeMatches.length > 0) {
           const time_row = document.createElement('tr');
           const time = document.createElement('td');
-          time.innerHTML = moment(activeStanding.time * 1000).format('DD.MM - HH:mm');
+
+          time.innerHTML = formatDate(activeStanding.time * 1000);
           time.className = 'MMM-SoccerLiveScore__time';
           time.setAttribute('colspan', '7');
           time_row.appendChild(time);
