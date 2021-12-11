@@ -123,7 +123,6 @@ module.exports = NodeHelper.create({
 
       const matches = standings.data.filter(s => s.type === 'matches')
       const times = [...new Set(matches.map(m => m.time))].sort()
-      times.forEach(t => console.log(new Date(t * 1000).toISOString()));
 
       Log.debug(this.name, 'getStandings | data', JSON.stringify(data, null, 2));
       this.refreshTime = (standings.refresh_time || 5 * 60) * 1000;
