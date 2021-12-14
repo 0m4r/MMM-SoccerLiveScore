@@ -93,14 +93,14 @@
 }
 
 .MMM-SoccerLiveScore-horizontal-infinite-scroll {
-  animation: MMMSoccerLiveScoreScrollLeft 0s infinite linear;
+  animation: MMMSoccerLiveScoreScrollLeft 00s infinite linear;
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   white-space: nowrap;
   text-align: left;
   padding-left: 100%;
   font-size: 80%;
-
+  color: var(--color-text-dimmed);
   margin: 0;
   position: absolute;
   top: 0;

@@ -159,7 +159,6 @@ module.exports = NodeHelper.create({
           let deltaNowNextRequest = next_start * 1000
 
           if (next_round <= selectable_rounds) {
-            next_round = parseInt(current_round) + 1;
             if (data.rounds_detailed[current_round].schedule_start !== 0) {
               next_start = data.rounds_detailed[current_round].schedule_start - fiveMinutes
               deltaNowNextRequest = next_start * 1000
