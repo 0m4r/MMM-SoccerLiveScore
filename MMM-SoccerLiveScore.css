@@ -47,6 +47,10 @@
   animation: MMMSoccerLiveScorePulsate 4s infinite alternate ease-in-out ;
 }
 
+.MMM-SoccerLiveScore-postponed {
+  color: orange;
+}
+
 .MMM-SoccerLiveScore__is_playing {
   width: 10px;
   text-align: center;

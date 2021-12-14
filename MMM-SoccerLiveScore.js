@@ -204,6 +204,11 @@ Module.register('MMM-SoccerLiveScore', {
               colon.classList.add('MMM-SoccerLiveScore-active');
               team2_score.classList.add('MMM-SoccerLiveScore-active');
             }
+            if ([60].includes(activeMatch.status)) {
+              team1_score.classList.add('MMM-SoccerLiveScore-postponed');
+              colon.classList.add('MMM-SoccerLiveScore-postponed');
+              team2_score.classList.add('MMM-SoccerLiveScore-postponed');
+            }
 
             if (this.config.showLogos) {
               const team2_logo_cell = document.createElement('td');
