@@ -28,6 +28,8 @@ Module.register('MMM-SoccerLiveScore', {
     showTables: true,
     showScorers: true,
     showDetails: true,
+    showMatchDetails: true,
+    monthFirstOnDate: false,
     scrollVertical: true,
     logosToInvert: [30001132, 30000991, 30000145], // Juventus team_id in 1, 23, and 328 leagues
   },
@@ -92,6 +94,7 @@ Module.register('MMM-SoccerLiveScore', {
       showScorers: this.config.showScorers,
       showStandings: this.config.showStandings,
       showDetails: this.config.showDetails,
+      showMatchDetails: this.config.showMatchDetails,
     };
     this.sendSocketNotification(this.name + '-CONFIG', config);
   },
@@ -118,14 +121,17 @@ Module.register('MMM-SoccerLiveScore', {
     const hasStandingsToShow = this.config.showStandings === true && standing && Object.keys(standing).length > 0;
     const hasTablesToShow = (this.leagueIds[this.activeId].has_table && this.config.showTables) === true && Array.isArray(tables) && tables.length > 0;
     const hasScorersToShow = (this.leagueIds[this.activeId].has_scorers && this.config.showScorers) === true && Array.isArray(scorers) && scorers.length > 0
-    const formatDate = time => {
+    const formatDate = (time, monthFirst) => {
       const d = new Date(time)
       const month = d.getMonth() + 1;
       const day = d.getDate();
       const hours = d.getHours();
       const minutes = d.getMinutes();
-      return `${day < 10 ? '0' + day : day}.${month < 10 ? '0' + month : month} ${hours < 10 ? '0' + hours : hours}:${minutes < 10 ? '0' + minutes : minutes}`
-
+      if(monthFirst) {
+        return `${month < 10 ? '0' + month : month}.${day < 10 ? '0' + day : day} ${hours < 10 ? '0' + hours : hours}:${minutes < 10 ? '0' + minutes : minutes}`
+      } else {
+        return `${day < 10 ? '0' + day : day}.${month < 10 ? '0' + month : month} ${hours < 10 ? '0' + hours : hours}:${minutes < 10 ? '0' + minutes : minutes}`
+      }
     }
 
     let nextRequest = null;
@@ -153,7 +159,7 @@ Module.register('MMM-SoccerLiveScore', {
           const time_row = document.createElement('tr');
           const time = document.createElement('td');
 
-          time.innerHTML = formatDate(activeStanding.time * 1000);
+          time.innerHTML = formatDate(activeStanding.time * 1000, this.config.monthFirstOnDate);
           time.className = 'MMM-SoccerLiveScore__time';
           time.setAttribute('colspan', '7');
           time_row.appendChild(time);
@@ -188,14 +194,14 @@ Module.register('MMM-SoccerLiveScore', {
             const team1_score = document.createElement('td');
             team1_score.setAttribute('width', '15px');
             team1_score.setAttribute('align', 'center');
-            team1_score.innerHTML = activeMatch.team1_goals;
+            team1_score.innerHTML = new Date(activeStanding.time * 1000).getTime() > Date.now() ? '--' : activeMatch.team1_goals;
             const colon = document.createElement('td');
             colon.classList.add('MMM-SoccerLiveScore__colon');
             colon.innerHTML = ':';
             const team2_score = document.createElement('td');
             team2_score.setAttribute('width', '15px');
             team2_score.setAttribute('align', 'center');
-            team2_score.innerHTML = activeMatch.team2_goals;
+            team2_score.innerHTML = new Date(activeStanding.time * 1000).getTime() > Date.now() ? '--' : activeMatch.team2_goals;
             match.appendChild(team1_score);
             match.appendChild(colon);
             match.appendChild(team2_score);
@@ -269,29 +275,33 @@ Module.register('MMM-SoccerLiveScore', {
               }
               else if (Array.isArray(activeMatch.match_info) && activeMatch.match_info.length > 0) {
                 const matchInfo = document.createElement('tr');
-                const info = document.createElement('td');
-                info.classList.add('MMM-SoccerLiveScore-match_info');
-                info.setAttribute('colspan', '7');
-                const p = document.createElement('p');
-                p.classList.add('MMM-SoccerLiveScore-horizontal-infinite-scroll');
-                p.style.animationDelay = -1 * activeMatch.match_info.length * 0.1 + 's';
-                p.style.animationDuration = (parseFloat(this.config.displayTime) > 20 * 1000 ? 20 * 1000 : this.config.displayTime) + 'ms';
-                activeMatch.match_info.forEach(it => {
-                  if (it.info_type === 'venue') {
-                    const i = document.createElement('i')
-                    i.classList.add('fa', 'fa-ring');
-                    p.appendChild(i)
-                  } else if (it.info_type === 'referee') {
-                    const i = document.createElement('i')
-                    i.classList.add('fa', 'fa-id-card');
-                    p.appendChild(i)
-                  }
-                  const span = document.createElement('span')
-                  span.innerHTML = ' ' + (it.subtitle ? it.subtitle + ' ' : '') + (it.title ? it.title + ' ' : '')
-                  p.appendChild(span)
-                })
-                info.appendChild(p)
-                matchInfo.appendChild(info)
+                if(this.config.showMatchDetails) {
+                  const info = document.createElement('td');
+                  info.classList.add('MMM-SoccerLiveScore-match_info');
+                  info.setAttribute('colspan', '7');
+                  const p = document.createElement('p');
+                  p.classList.add('MMM-SoccerLiveScore-horizontal-infinite-scroll');
+                  p.style.animationDelay = -1 * activeMatch.match_info.length * 0.1 + 's';
+                  p.style.animationDuration = (parseFloat(this.config.displayTime) > 20 * 1000 ? 20 * 1000 : this.config.displayTime) + 'ms';
+                  activeMatch.match_info.forEach(it => {
+                    if (it.info_type === 'venue') {
+                      const i = document.createElement('i')
+                      i.classList.add('fa', 'fa-ring');
+                      p.appendChild(i)
+                    } else if (it.info_type === 'referee') {
+                      const i = document.createElement('i')
+                      i.classList.add('fa', 'fa-id-card');
+                      p.appendChild(i)
+                    }
+                    const span = document.createElement('span')
+                    span.innerHTML = ' ' +
+                      (it.subtitle ? it.subtitle + ' ' : '') +
+                      (it.title ? it.title + ' ' : '')
+                    p.appendChild(span)
+                  });
+                  info.appendChild(p)
+                  matchInfo.appendChild(info)
+                }
                 matches.appendChild(matchInfo)
               }
             }
