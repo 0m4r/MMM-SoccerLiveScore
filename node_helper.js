@@ -1,4 +1,4 @@
-/* Magic Mirror
+/* MagicMirror²
  * Module: MMM-SoccerLiveScore
  *
  * By Omar Adobati https://github.com/0m4r

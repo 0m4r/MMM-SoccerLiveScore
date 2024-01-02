@@ -2,7 +2,7 @@
 
 # MMM-SoccerLiveScore
 
-This a module for the [MagicMirror](https://github.com/MichMich/MagicMirror).  
+This a module for the [MagicMirror²](https://github.com/MichMich/MagicMirror).  
 It displays live scores of your favorite soccer leagues and competitions.
 
 ## Preview
@@ -28,7 +28,7 @@ It displays live scores of your favorite soccer leagues and competitions.
 1. Navigate into your MagicMirror's `modules` folder and execute `git clone https://github.com/0m4r/MMM-SoccerLiveScore.git`.
 2. Type `npm ci`
 3. prepare your configuration
-4. restart your magic mirror
+4. restart your MagicMirror
 
 ## Config
 
