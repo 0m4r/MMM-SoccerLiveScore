@@ -1,6 +1,6 @@
 {
   "name": "MMM-SoccerLiveScore",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "MagicMirror-Module for displaying live soccer scores.",
   "main": "MMM-SoccerLiveScore.js",
   "scripts": {
@@ -32,7 +32,6 @@
   "devDependencies": {
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.1.2",
-    "node-fetch": "2.6.7"
+    "eslint-plugin-prettier": "^5.1.2"
   }
 }

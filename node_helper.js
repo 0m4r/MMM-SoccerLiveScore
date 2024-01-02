@@ -7,7 +7,6 @@
 
 const NodeHelper = require('node_helper');
 const Log = require('logger');
-const fetch = require('node-fetch');
 
 module.exports = NodeHelper.create({
   refreshTime: 2 * 60 * 1000,

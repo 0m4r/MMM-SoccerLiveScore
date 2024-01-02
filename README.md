@@ -24,9 +24,8 @@ It displays live scores of your favorite soccer leagues and competitions.
 ## Installation
 
 1. Navigate into your MagicMirror's `modules` folder and execute `git clone https://github.com/0m4r/MMM-SoccerLiveScore`.
-2. Type `npm ci`
-3. Prepare your configuration
-4. Restart your MagicMirror
+2. Prepare your configuration
+3. Restart your MagicMirror
 
 ## Config
 
