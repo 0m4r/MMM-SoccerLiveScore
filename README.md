@@ -2,7 +2,7 @@
 
 # MMM-SoccerLiveScore
 
-This a module for the [MagicMirror²](https://github.com/MichMich/MagicMirror).  
+This a module for the [MagicMirror²](https://github.com/MagicMirrorOrg/MagicMirror).  
 It displays live scores of your favorite soccer leagues and competitions.
 
 ## Preview
@@ -333,5 +333,5 @@ Here is an example of an entry in `config.js`
   
 ## Special Thanks
 
-- [Michael Teeuw](https://github.com/MichMich) for creating the awesome [MagicMirror2](https://github.com/MichMich/MagicMirror/tree/develop) project that made this module possible.
+- [Michael Teeuw](https://github.com/MichMich) for creating the awesome [MagicMirror²](https://github.com/MagicMirrorOrg/MagicMirror/tree/develop) project that made this module possible.
 - [mrtysn](https://github.com/mrtysn) for starting the MMM-soccerLiveScore module, where from this code has been forked (https://github.com/mrtysn/MMM-SoccerLiveScore)
