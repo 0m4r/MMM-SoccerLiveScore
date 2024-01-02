@@ -1,5 +1,3 @@
-**fork of: https://github.com/mrtysn/MMM-SoccerLiveScore**
-
 # MMM-SoccerLiveScore
 
 This a module for the [MagicMirror²](https://github.com/MagicMirrorOrg/MagicMirror).  
@@ -9,26 +7,26 @@ It displays live scores of your favorite soccer leagues and competitions.
 
 ### Standing
 
-![](screenshots/MMM-SoccerLiveScores-Standings.png)
+![Standing](screenshots/MMM-SoccerLiveScores-Standings.png)
 
 ### Table
 
-![](screenshots/MMM-SoccerLiveScores-Tables.png)
+![Table](screenshots/MMM-SoccerLiveScores-Tables.png)
 
 ### Scorers
 
-![](screenshots/MMM-SoccerLiveScores-Scorers.png)
+![Scorers](screenshots/MMM-SoccerLiveScores-Scorers.png)
 
 ### Standings & Details
 
-![](screenshots/MMM-SoccerLiveScores-Standings+Details.png)
+![Standings & Details](screenshots/MMM-SoccerLiveScores-Standings+Details.png)
 
 ## Installation
 
-1. Navigate into your MagicMirror's `modules` folder and execute `git clone https://github.com/0m4r/MMM-SoccerLiveScore.git`.
+1. Navigate into your MagicMirror's `modules` folder and execute `git clone https://github.com/0m4r/MMM-SoccerLiveScore`.
 2. Type `npm ci`
-3. prepare your configuration
-4. restart your MagicMirror
+3. Prepare your configuration
+4. Restart your MagicMirror
 
 ## Config
 
@@ -330,8 +328,7 @@ Here is an example of an entry in `config.js`
     </tr>
 </table>
   
-  
 ## Special Thanks
 
 - [Michael Teeuw](https://github.com/MichMich) for creating the awesome [MagicMirror²](https://github.com/MagicMirrorOrg/MagicMirror/tree/develop) project that made this module possible.
-- [mrtysn](https://github.com/mrtysn) for starting the MMM-soccerLiveScore module, where from this code has been forked (https://github.com/mrtysn/MMM-SoccerLiveScore)
+- [mrtysn](https://github.com/mrtysn) for starting the MMM-soccerLiveScore module, where from this code has been forked (<https://github.com/mrtysn/MMM-SoccerLiveScore>)
