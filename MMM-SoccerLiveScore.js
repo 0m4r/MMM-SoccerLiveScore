@@ -126,21 +126,13 @@ Module.register('MMM-SoccerLiveScore', {
       scorers.length > 0;
     const formatDate = (time) => {
       const d = new Date(time);
-      const month = d.getMonth() + 1;
-      const day = d.getDate();
-      const hours = d.getHours();
-      const minutes = d.getMinutes();
-      return `${day < 10 ? '0' + day : day}.${month < 10 ? '0' + month : month} ${hours < 10 ? '0' + hours : hours}:${
-        minutes < 10 ? '0' + minutes : minutes
-      }`;
+      return d.toLocaleString();
     };
 
     let nextRequest = null;
     if (this.nextRequest[this.activeId]) {
       const tmp = new Date(this.nextRequest[this.activeId]);
-      const date = tmp.toLocaleDateString();
-      const time = tmp.toLocaleTimeString();
-      nextRequest = `${date} ${time}`;
+      nextRequest = formatDate(tmp);
     }
 
     if (hasStandingsToShow && this.standingActive) {
@@ -195,14 +187,14 @@ Module.register('MMM-SoccerLiveScore', {
             const team1_score = document.createElement('td');
             team1_score.setAttribute('width', '15px');
             team1_score.setAttribute('align', 'center');
-            team1_score.innerHTML = activeMatch.team1_goals;
+            team1_score.innerHTML = activeMatch.status === 0 ? "-" : activeMatch.team1_goals;
             const colon = document.createElement('td');
             colon.classList.add('MMM-SoccerLiveScore__colon');
             colon.innerHTML = ':';
             const team2_score = document.createElement('td');
             team2_score.setAttribute('width', '15px');
             team2_score.setAttribute('align', 'center');
-            team2_score.innerHTML = activeMatch.team2_goals;
+            team2_score.innerHTML = activeMatch.status === 0 ? "-" : activeMatch.team2_goals;
             match.appendChild(team1_score);
             match.appendChild(colon);
             match.appendChild(team2_score);
