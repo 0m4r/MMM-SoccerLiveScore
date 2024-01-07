@@ -1,4 +1,4 @@
-/* Magic Mirror
+/* MagicMirror²
  * Module: MMM-SoccerLiveScore
  *
  * By Omar Adobati https://github.com/0m4r
@@ -116,24 +116,31 @@ Module.register('MMM-SoccerLiveScore', {
     const scorers = this.scorers && Object.keys(this.scorers).length ? this.scorers[this.activeId] : [];
 
     const hasStandingsToShow = this.config.showStandings === true && standing && Object.keys(standing).length > 0;
-    const hasTablesToShow = (this.leagueIds[this.activeId].has_table && this.config.showTables) === true && Array.isArray(tables) && tables.length > 0;
-    const hasScorersToShow = (this.leagueIds[this.activeId].has_scorers && this.config.showScorers) === true && Array.isArray(scorers) && scorers.length > 0
-    const formatDate = time => {
-      const d = new Date(time)
+    const hasTablesToShow =
+      (this.leagueIds[this.activeId].has_table && this.config.showTables) === true &&
+      Array.isArray(tables) &&
+      tables.length > 0;
+    const hasScorersToShow =
+      (this.leagueIds[this.activeId].has_scorers && this.config.showScorers) === true &&
+      Array.isArray(scorers) &&
+      scorers.length > 0;
+    const formatDate = (time) => {
+      const d = new Date(time);
       const month = d.getMonth() + 1;
       const day = d.getDate();
       const hours = d.getHours();
       const minutes = d.getMinutes();
-      return `${day < 10 ? '0' + day : day}.${month < 10 ? '0' + month : month} ${hours < 10 ? '0' + hours : hours}:${minutes < 10 ? '0' + minutes : minutes}`
-
-    }
+      return `${day < 10 ? '0' + day : day}.${month < 10 ? '0' + month : month} ${hours < 10 ? '0' + hours : hours}:${
+        minutes < 10 ? '0' + minutes : minutes
+      }`;
+    };
 
     let nextRequest = null;
     if (this.nextRequest[this.activeId]) {
-      const tmp = new Date(this.nextRequest[this.activeId])
+      const tmp = new Date(this.nextRequest[this.activeId]);
       const date = tmp.toLocaleDateString();
       const time = tmp.toLocaleTimeString();
-      nextRequest = `${date} ${time}`
+      nextRequest = `${date} ${time}`;
     }
 
     if (hasStandingsToShow && this.standingActive) {
@@ -235,7 +242,7 @@ Module.register('MMM-SoccerLiveScore', {
             matches.appendChild(match);
 
             if (this.config.showDetails) {
-              const hasDetails = activeMatch.details && activeMatch.details.length
+              const hasDetails = activeMatch.details && activeMatch.details.length;
               if (hasDetails) {
                 const matchDetails = document.createElement('tr');
                 const detail = document.createElement('td');
@@ -244,30 +251,30 @@ Module.register('MMM-SoccerLiveScore', {
                 const p = document.createElement('p');
                 p.classList.add('MMM-SoccerLiveScore-horizontal-infinite-scroll');
                 p.style.animationDelay = -1 * (activeMatch.details.length || 1) * 0.1 + 's';
-                p.style.animationDuration = (parseFloat(this.config.displayTime) > 20 * 1000 ? 20 * 1000 : this.config.displayTime) + 'ms';
+                p.style.animationDuration =
+                  (parseFloat(this.config.displayTime) > 20 * 1000 ? 20 * 1000 : this.config.displayTime) + 'ms';
                 activeMatch.details.forEach((d) => {
-                  const span = document.createElement('span')
+                  const span = document.createElement('span');
                   if (d.type === 1) {
-                    const i = document.createElement('i')
+                    const i = document.createElement('i');
                     i.classList.add('fa', 'fa-soccer-ball-o');
-                    p.appendChild(i)
+                    p.appendChild(i);
                   } else if (d.type === 4) {
-                    const i = document.createElement('i')
+                    const i = document.createElement('i');
                     i.classList.add('fa', 'MMM-SoccerLiveScore-details-red');
-                    p.appendChild(i)
+                    p.appendChild(i);
                   } else if ([2, 3].includes(d.type)) {
-                    const i = document.createElement('i')
+                    const i = document.createElement('i');
                     i.classList.add('fa', 'MMM-SoccerLiveScore-details-yellow');
-                    p.appendChild(i)
+                    p.appendChild(i);
                   }
-                  span.innerHTML += d.minute + ' ' + d.event_text + ' (' + d.team_name + ') '
-                  p.appendChild(span)
-                })
-                detail.appendChild(p)
-                matchDetails.appendChild(detail)
-                matches.appendChild(matchDetails)
-              }
-              else if (Array.isArray(activeMatch.match_info) && activeMatch.match_info.length > 0) {
+                  span.innerHTML += d.minute + ' ' + d.event_text + ' (' + d.team_name + ') ';
+                  p.appendChild(span);
+                });
+                detail.appendChild(p);
+                matchDetails.appendChild(detail);
+                matches.appendChild(matchDetails);
+              } else if (Array.isArray(activeMatch.match_info) && activeMatch.match_info.length > 0) {
                 const matchInfo = document.createElement('tr');
                 const info = document.createElement('td');
                 info.classList.add('MMM-SoccerLiveScore-match_info');
@@ -275,24 +282,25 @@ Module.register('MMM-SoccerLiveScore', {
                 const p = document.createElement('p');
                 p.classList.add('MMM-SoccerLiveScore-horizontal-infinite-scroll');
                 p.style.animationDelay = -1 * activeMatch.match_info.length * 0.1 + 's';
-                p.style.animationDuration = (parseFloat(this.config.displayTime) > 20 * 1000 ? 20 * 1000 : this.config.displayTime) + 'ms';
-                activeMatch.match_info.forEach(it => {
+                p.style.animationDuration =
+                  (parseFloat(this.config.displayTime) > 20 * 1000 ? 20 * 1000 : this.config.displayTime) + 'ms';
+                activeMatch.match_info.forEach((it) => {
                   if (it.info_type === 'venue') {
-                    const i = document.createElement('i')
+                    const i = document.createElement('i');
                     i.classList.add('fa', 'fa-ring');
-                    p.appendChild(i)
+                    p.appendChild(i);
                   } else if (it.info_type === 'referee') {
-                    const i = document.createElement('i')
+                    const i = document.createElement('i');
                     i.classList.add('fa', 'fa-id-card');
-                    p.appendChild(i)
+                    p.appendChild(i);
                   }
-                  const span = document.createElement('span')
-                  span.innerHTML = ' ' + (it.subtitle ? it.subtitle + ' ' : '') + (it.title ? it.title + ' ' : '')
-                  p.appendChild(span)
-                })
-                info.appendChild(p)
-                matchInfo.appendChild(info)
-                matches.appendChild(matchInfo)
+                  const span = document.createElement('span');
+                  span.innerHTML = ' ' + (it.subtitle ? it.subtitle + ' ' : '') + (it.title ? it.title + ' ' : '');
+                  p.appendChild(span);
+                });
+                info.appendChild(p);
+                matchInfo.appendChild(info);
+                matches.appendChild(matchInfo);
               }
             }
           });
@@ -300,12 +308,12 @@ Module.register('MMM-SoccerLiveScore', {
       });
       wrapper.appendChild(matches);
 
-      const tr = document.createElement('tr')
-      const td = document.createElement('td')
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
       td.setAttribute('colspan', '7');
       td.classList.add('MMM-SoccerLiveScore__api-info');
-      td.innerHTML = 'Next API request: ' + nextRequest
-      tr.appendChild(td)
+      td.innerHTML = 'Next API request: ' + nextRequest;
+      tr.appendChild(td);
       matches.appendChild(tr);
 
       this.standingActive = (!hasTablesToShow && !hasScorersToShow) || false;
@@ -529,9 +537,12 @@ Module.register('MMM-SoccerLiveScore', {
 
     clearTimeout(this.updateDomTimeout);
     if (timeSplit.length > 0) {
-      this.updateDomTimeout = setTimeout(function () {
-        self.updateDom(this.defaultTimeoutValueInMillis);
-      }, this.config.displayTime / (timeSplit.length || 1));
+      this.updateDomTimeout = setTimeout(
+        function () {
+          self.updateDom(this.defaultTimeoutValueInMillis);
+        },
+        this.config.displayTime / (timeSplit.length || 1)
+      );
     } else {
       const activeIdIndex = this.idList.findIndex((i) => i === this.activeId);
       setTimeout(function () {
@@ -570,7 +581,7 @@ Module.register('MMM-SoccerLiveScore', {
       }
     } else if (notification === this.name + '-STANDINGS') {
       this.standings[payload.leagueId] = payload.standings;
-      this.nextRequest[payload.leagueId] = payload.nextRequest
+      this.nextRequest[payload.leagueId] = payload.nextRequest;
     } else if (notification === this.name + '-TABLE') {
       this.tables[payload.leagueId] = payload.table;
     } else if (notification === this.name + '-SCORERS') {
@@ -578,6 +589,6 @@ Module.register('MMM-SoccerLiveScore', {
     } else {
       Log.error(this.name, 'unknown notification', notification, payload);
     }
-    this.updateDom(500)
+    this.updateDom(500);
   },
 });
