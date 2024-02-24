@@ -23,11 +23,11 @@
   },
   "homepage": "https://github.com/0m4r/MMM-SoccerLiveScore#readme",
   "keywords": [
-    "MMM",
     "magic mirror",
     "magic mirror 2",
     "live score",
-    "soccer"
+    "soccer",
+    "sport"
   ],
   "devDependencies": {
     "eslint": "^8.56.0",
