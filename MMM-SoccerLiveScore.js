@@ -110,11 +110,9 @@ Module.register('MMM-SoccerLiveScore', {
   },
 
   buildTDForFlag: function (value, classes) {
-    console.log(value)
     const td = this.buildTD('', classes)
     const img = document.createElement('img')
-    const invert = this.config.logosToInvert.some(s => console.log(value, s) || value.includes(`${s}`))
-    console.log(invert)
+    const invert = this.config.logosToInvert.some(s => value.includes(`${s}`))
     if (invert) {
       img.classList.add('MMM-SoccerLiveScore-team_logo--invert');
     }
@@ -149,8 +147,7 @@ Module.register('MMM-SoccerLiveScore', {
       f.games.forEach(m => {
         const tr1 = document.createElement('tr');
         const time = new Date(m.utcDate).toLocaleTimeString()
-        const group = m.group
-        tr1.appendChild(this.buildTD(time + " " + group, [], 7));
+        tr1.appendChild(this.buildTD(time, [], 7));
         tr1.classList.add('MMM-SoccerLiveScore-' + m.status, 'MMM-SoccerLiveScore-time-group')
         matches.appendChild(tr1)
 
@@ -452,9 +449,10 @@ Module.register('MMM-SoccerLiveScore', {
     }
 
     const timeSplit = [hasStandingsToShow, hasTablesToShow, hasScorersToShow].filter((v) => v);
-    Log.debug(this.name, 'timeSplit', timeSplit.length, this.activeId);
+    Log.info(this.name, 'timeSplit', timeSplit.length, this.activeId, this.config.displayTime);
 
     clearTimeout(this.updateDomTimeout);
+    // if there is something to show, show it
     if (timeSplit.length > 0) {
       this.updateDomTimeout = setTimeout(
         function () {
@@ -462,7 +460,7 @@ Module.register('MMM-SoccerLiveScore', {
         },
         this.config.displayTime / (timeSplit.length || 1)
       );
-    } else {
+    } else { // otherwise move to the next league
       const activeIdIndex = this.idList.findIndex((i) => i === this.activeId);
       setTimeout(function () {
         self.changeLeague(activeIdIndex + 1);

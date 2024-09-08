@@ -189,10 +189,12 @@
 
 .MMM-SoccerLiveScore-awayTeam {
   text-align: left;
+  width: 40%;
 }
 
 .MMM-SoccerLiveScore-homeTeam {
   text-align: right;
+  width: 40%;
 }
 
 .MMM-SoccerLiveScore-date,

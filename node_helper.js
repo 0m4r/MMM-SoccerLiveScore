@@ -226,28 +226,30 @@ module.exports = NodeHelper.create({
 
       let statuses = matches.map(m => m.status);
       const hasActiveGames = statuses.includes('PAUSED') || statuses.includes('IN_PLAY')
+      let timeUntilNextGameMinusFiveMinutes = 0
       if (!hasActiveGames) {
         const dates = matches.map(m => m.utcDate);
         const nextDates = this.findNextGameDate(dates, true)
         if (nextDates && nextDates.length > 0) {
           const next = nextDates[0];
           const timeUntilNextGame = new Date(next) - new Date();
-          const timeUntilNextGameMinusFiveMinutes = timeUntilNextGame - 5 * 60 * 1000
+          timeUntilNextGameMinusFiveMinutes = timeUntilNextGame - 5 * 60 * 1000
           if (timeUntilNextGameMinusFiveMinutes > 0) {
             Log.info(this.name, 'getStandings | timeUntilNextGame', leagueCode, round, timeUntilNextGameMinusFiveMinutes, new Date(new Date().getTime() + timeUntilNextGameMinusFiveMinutes));
             // self.fetchAllWithInterval(timeUntilNextGameMinusFiveMinutes, false);
           }
         }
       }
+      Log.info(this.name, 'getStandings | timeUntilNextGame', leagueCode, round, timeUntilNextGameMinusFiveMinutes, new Date(new Date().getTime() + timeUntilNextGameMinusFiveMinutes));
 
       const matchesGroupedByDate = this.groupByDate(matches)
       // this.sendSocketNotification(this.name + 'FIXTURES', matchesGroupedByDate);
 
-      Log.debug(this.name, 'getStandings', JSON.stringify(matchesGroupedByDate))
+      // Log.debug(this.name, 'getStandings', JSON.stringify(matchesGroupedByDate))
       this.sendSocketNotification(this.name + '-STANDINGS', {
         leagueId: leagueCode,
         standings: matchesGroupedByDate,
-        nextRequest: 5 * 60 * 1000
+        nextRequest: new Date(Date.now() + timeUntilNextGameMinusFiveMinutes)
       });
     } catch (e) {
       Log.error(this.name, 'getStandings', e)
