@@ -44,7 +44,7 @@
 
 .MMM-SoccerLiveScore-active {
   color: red;
-  animation: MMMSoccerLiveScorePulsate 4s infinite alternate ease-in-out ;
+  animation: MMMSoccerLiveScorePulsate 4s infinite alternate ease-in-out;
 }
 
 .MMM-SoccerLiveScore-postponed {
@@ -136,6 +136,126 @@
 }
 
 @keyframes MMMSoccerLiveScorePulsate {
+  0% {
+    opacity: 0.1;
+  }
+  20% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0.1;
+  }
+}
+
+/*** **/
+.MMM-SoccerLiveScore-table td,
+.MMM-SoccerLiveScore-table th {
+  padding: 0 0.2rem;
+}
+
+.MMM-SoccerLiveScore-table th {
+  text-align: center;
+}
+
+.MMM-SoccerLiveScore-FINISHED {
+  opacity: 0.8;
+}
+
+.MMM-SoccerLiveScore-FINISHED .MMM-SoccerLiveScore-score {
+  font-weight: bolder;
+}
+
+.MMM-SoccerLiveScore-PAUSED,
+.MMM-SoccerLiveScore-IN_PLAY {
+  opacity: 1;
+}
+
+.MMM-SoccerLiveScore-PAUSED .MMM-SoccerLiveScore-score,
+.MMM-SoccerLiveScore-IN_PLAY .MMM-SoccerLiveScore-score {
+  animation: pulsate 4s ease-in-out infinite;
+  color: red;
+}
+
+.MMM-SoccerLiveScore-SCHEDULED,
+.MMM-SoccerLiveScore-TIMED {
+  opacity: 0.3;
+}
+
+.MMM-SoccerLiveScore-awayTeam {
+  text-align: left;
+}
+
+.MMM-SoccerLiveScore-homeTeam {
+  text-align: right;
+}
+
+.MMM-SoccerLiveScore-date,
+.MMM-SoccerLiveScore-time-group,
+.MMM-SoccerLiveScore-referee {
+  font-size: smaller;
+  background-color: #6666663a;
+  text-align: center;
+  font-size: smaller;
+}
+
+.MMM-SoccerLiveScore-referee {
+  background: transparent;
+  color: var(--color-text);
+}
+
+.MMM-SoccerLiveScore-header {
+  font-size: 12px;
+  margin: 0;
+  text-align: right;
+  line-height: 1.5rem;
+}
+
+.MMM-SoccerLiveScore-footer {
+  font-size: 12px;
+  margin: 0;
+  border-top: 1px solid var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.MMM-SoccerLiveScore-footer-right,
+.MMM-SoccerLiveScore-footer-left {
+  flex: 0 1 100%;
+}
+
+.MMM-SoccerLiveScore-footer-right {
+  text-align: right;
+}
+
+.MMM-SoccerLiveScore-footer-left {
+  text-align: left;
+}
+
+.MMM-SoccerLiveScore-footer-version,
+.MMM-SoccerLiveScore-footer-dates {
+  display: inline-block;
+  max-width: 100%;
+}
+.MMM-SoccerLiveScore-footer-version {
+  margin-left: 0.5rem;
+}
+
+.MMM-SoccerLiveScore-footer-dates {
+  margin-right: 0.5rem;
+}
+
+.MMM-SoccerLiveScore-footer-version-update {
+  color: gold;
+}
+
+@keyframes pulsate {
   0% {
     opacity: 0.1;
   }
