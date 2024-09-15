@@ -10,8 +10,7 @@ const Log = require('logger');
 
 module.exports = NodeHelper.create({
   requiresVersion: "2.1.0",
-  // name: "MMM-SoccerLiveScore",
-  refreshTime: 2 * 60 * 1000,
+  requestInterval: 2 * 60 * 1000,
   refreshTimeout: {},
   timeoutStandings: [],
   timeoutTable: [],
@@ -25,6 +24,7 @@ module.exports = NodeHelper.create({
   token: null,
   supportedLanguages: ['it', 'de', 'en'],
   baseURL: 'https://api.football-data.org/v4',
+  // baseURL: "https://49dc9106-7505-4baf-90f7-b719714418c3.mock.pstmn.io",
   requestOptions: {
     method: 'GET',
     gzip: true,
@@ -105,16 +105,16 @@ module.exports = NodeHelper.create({
         'X-Auth-Token': this.token
       },
     };
-    Log.debug(this.name, 'doPost', localUrl, localOptions);
+    // Log.debug(this.name, 'doPost', localUrl, localOptions);
     const resp = await fetch(url, localOptions);
     if (resp.status === 200) {
       data = await resp.json();
     } else {
-      Log.error(this.name, 'doPost', localUrl, localOptions, resp);
+      Log.error(this.name, 'doPost', localUrl.href, resp);
+      // Log.debug(this.name, 'doPost', localUrl, localOptions, resp);
       data = null;
     }
     return data;
-    // return {}
   },
 
   getLeagueIds: async function (leagues) {
@@ -130,14 +130,15 @@ module.exports = NodeHelper.create({
           const comp = competitions.find((c) => 'id' in c && c.id === l);
           if (comp && 'id' in comp) {
             this.leaguesList[comp.id] = { code: comp.code, currentMatchday: comp.currentSeason.currentMatchday };
+            this.refreshTimeout[comp.code] = this.requestInterval || 1 * 60 * 1000
           }
         });
 
         Object.values(this.leaguesList).forEach(async ({ code, currentMatchday }) => {
-          console.log(code, currentMatchday)
-          await this.getStandings(code, currentMatchday);
-          this.showTables && this.leaguesList[id].has_table && this.getTable(id);
-          this.showScorers && this.leaguesList[id].has_scorers && this.getScorers(id);
+          // this.showStandings && await this.getStandings(code, currentMatchday);
+          // this.showTables && await this.getTable(code);
+          // this.showScorers && this.getScorers(code);
+          this.getAll(code, currentMatchday);
         });
       }
     }
@@ -145,30 +146,443 @@ module.exports = NodeHelper.create({
     this.sendSocketNotification(this.name + '-LEAGUES', { leaguesList: this.leaguesList });
   },
 
+  getAll: async function (leagueCode, currentMatchday) {
+    Log.debug(this.name, 'getAll', 'leagueCode', leagueCode, 'currentMatchday', currentMatchday);
+    this.showStandings && await this.getStandings(leagueCode, currentMatchday);
+    this.showTables && await this.getTable(leagueCode);
+    this.showScorers && await this.getScorers(leagueCode);
+  },
+
   getTable: async function (leagueId) {
-    const url = `${this.baseURL}/competitions/${leagueId.toString()}/table`;
+    const url = `${this.baseURL}/competitions/${leagueId.toString()}/standings`;
     Log.debug(this.name, 'getTable', url);
     const data = await this.doPost(url);
+    // const data = {
+    //   "filters": {
+    //     "season": "2024"
+    //   },
+    //   "area": {
+    //     "id": 2114,
+    //     "name": "Italy",
+    //     "code": "ITA",
+    //     "flag": "https://crests.football-data.org/784.svg"
+    //   },
+    //   "competition": {
+    //     "id": 2019,
+    //     "name": "Serie A",
+    //     "code": "SA",
+    //     "type": "LEAGUE",
+    //     "emblem": "https://crests.football-data.org/SA.png"
+    //   },
+    //   "season": {
+    //     "id": 2310,
+    //     "startDate": "2024-08-18",
+    //     "endDate": "2025-05-25",
+    //     "currentMatchday": 4,
+    //     "winner": null
+    //   },
+    //   "standings": [
+    //     {
+    //       "stage": "REGULAR_SEASON",
+    //       "type": "TOTAL",
+    //       "group": null,
+    //       "table": [
+    //         {
+    //           "position": 1,
+    //           "team": {
+    //             "id": 109,
+    //             "name": "Juventus FC",
+    //             "shortName": "Juventus",
+    //             "tla": "JUV",
+    //             "crest": "https://crests.football-data.org/109.png"
+    //           },
+    //           "playedGames": 4,
+    //           "form": null,
+    //           "won": 2,
+    //           "draw": 2,
+    //           "lost": 0,
+    //           "points": 8,
+    //           "goalsFor": 6,
+    //           "goalsAgainst": 0,
+    //           "goalDifference": 6
+    //         },
+    //         {
+    //           "position": 2,
+    //           "team": {
+    //             "id": 108,
+    //             "name": "FC Internazionale Milano",
+    //             "shortName": "Inter",
+    //             "tla": "INT",
+    //             "crest": "https://crests.football-data.org/108.png"
+    //           },
+    //           "playedGames": 3,
+    //           "form": null,
+    //           "won": 2,
+    //           "draw": 1,
+    //           "lost": 0,
+    //           "points": 7,
+    //           "goalsFor": 8,
+    //           "goalsAgainst": 2,
+    //           "goalDifference": 6
+    //         },
+    //         {
+    //           "position": 3,
+    //           "team": {
+    //             "id": 586,
+    //             "name": "Torino FC",
+    //             "shortName": "Torino",
+    //             "tla": "TOR",
+    //             "crest": "https://crests.football-data.org/586.png"
+    //           },
+    //           "playedGames": 3,
+    //           "form": null,
+    //           "won": 2,
+    //           "draw": 1,
+    //           "lost": 0,
+    //           "points": 7,
+    //           "goalsFor": 5,
+    //           "goalsAgainst": 3,
+    //           "goalDifference": 2
+    //         },
+    //         {
+    //           "position": 4,
+    //           "team": {
+    //             "id": 115,
+    //             "name": "Udinese Calcio",
+    //             "shortName": "Udinese",
+    //             "tla": "UDI",
+    //             "crest": "https://crests.football-data.org/115.png"
+    //           },
+    //           "playedGames": 3,
+    //           "form": null,
+    //           "won": 2,
+    //           "draw": 1,
+    //           "lost": 0,
+    //           "points": 7,
+    //           "goalsFor": 4,
+    //           "goalsAgainst": 2,
+    //           "goalDifference": 2
+    //         },
+    //         {
+    //           "position": 5,
+    //           "team": {
+    //             "id": 450,
+    //             "name": "Hellas Verona FC",
+    //             "shortName": "Verona",
+    //             "tla": "HVE",
+    //             "crest": "https://crests.football-data.org/450.png"
+    //           },
+    //           "playedGames": 3,
+    //           "form": null,
+    //           "won": 2,
+    //           "draw": 0,
+    //           "lost": 1,
+    //           "points": 6,
+    //           "goalsFor": 5,
+    //           "goalsAgainst": 3,
+    //           "goalDifference": 2
+    //         },
+    //         {
+    //           "position": 6,
+    //           "team": {
+    //             "id": 113,
+    //             "name": "SSC Napoli",
+    //             "shortName": "Napoli",
+    //             "tla": "NAP",
+    //             "crest": "https://crests.football-data.org/113.png"
+    //           },
+    //           "playedGames": 3,
+    //           "form": null,
+    //           "won": 2,
+    //           "draw": 0,
+    //           "lost": 1,
+    //           "points": 6,
+    //           "goalsFor": 5,
+    //           "goalsAgainst": 4,
+    //           "goalDifference": 1
+    //         },
+    //         {
+    //           "position": 7,
+    //           "team": {
+    //             "id": 445,
+    //             "name": "Empoli FC",
+    //             "shortName": "Empoli",
+    //             "tla": "EMP",
+    //             "crest": "https://crests.football-data.org/445.png"
+    //           },
+    //           "playedGames": 4,
+    //           "form": null,
+    //           "won": 1,
+    //           "draw": 3,
+    //           "lost": 0,
+    //           "points": 6,
+    //           "goalsFor": 3,
+    //           "goalsAgainst": 2,
+    //           "goalDifference": 1
+    //         },
+    //         {
+    //           "position": 8,
+    //           "team": {
+    //             "id": 98,
+    //             "name": "AC Milan",
+    //             "shortName": "Milan",
+    //             "tla": "MIL",
+    //             "crest": "https://crests.football-data.org/98.png"
+    //           },
+    //           "playedGames": 4,
+    //           "form": null,
+    //           "won": 1,
+    //           "draw": 2,
+    //           "lost": 1,
+    //           "points": 5,
+    //           "goalsFor": 9,
+    //           "goalsAgainst": 6,
+    //           "goalDifference": 3
+    //         },
+    //         {
+    //           "position": 9,
+    //           "team": {
+    //             "id": 110,
+    //             "name": "SS Lazio",
+    //             "shortName": "Lazio",
+    //             "tla": "LAZ",
+    //             "crest": "https://crests.football-data.org/110.png"
+    //           },
+    //           "playedGames": 3,
+    //           "form": null,
+    //           "won": 1,
+    //           "draw": 1,
+    //           "lost": 1,
+    //           "points": 4,
+    //           "goalsFor": 6,
+    //           "goalsAgainst": 5,
+    //           "goalDifference": 1
+    //         },
+    //         {
+    //           "position": 10,
+    //           "team": {
+    //             "id": 112,
+    //             "name": "Parma Calcio 1913",
+    //             "shortName": "Parma",
+    //             "tla": "PAR",
+    //             "crest": "https://crests.football-data.org/112.png"
+    //           },
+    //           "playedGames": 3,
+    //           "form": null,
+    //           "won": 1,
+    //           "draw": 1,
+    //           "lost": 1,
+    //           "points": 4,
+    //           "goalsFor": 4,
+    //           "goalsAgainst": 4,
+    //           "goalDifference": 0
+    //         },
+    //         {
+    //           "position": 11,
+    //           "team": {
+    //             "id": 107,
+    //             "name": "Genoa CFC",
+    //             "shortName": "Genoa",
+    //             "tla": "GEN",
+    //             "crest": "https://crests.football-data.org/107.png"
+    //           },
+    //           "playedGames": 3,
+    //           "form": null,
+    //           "won": 1,
+    //           "draw": 1,
+    //           "lost": 1,
+    //           "points": 4,
+    //           "goalsFor": 3,
+    //           "goalsAgainst": 4,
+    //           "goalDifference": -1
+    //         },
+    //         {
+    //           "position": 12,
+    //           "team": {
+    //             "id": 99,
+    //             "name": "ACF Fiorentina",
+    //             "shortName": "Fiorentina",
+    //             "tla": "FIO",
+    //             "crest": "https://crests.football-data.org/99.png"
+    //           },
+    //           "playedGames": 3,
+    //           "form": null,
+    //           "won": 0,
+    //           "draw": 3,
+    //           "lost": 0,
+    //           "points": 3,
+    //           "goalsFor": 3,
+    //           "goalsAgainst": 3,
+    //           "goalDifference": 0
+    //         },
+    //         {
+    //           "position": 13,
+    //           "team": {
+    //             "id": 102,
+    //             "name": "Atalanta BC",
+    //             "shortName": "Atalanta",
+    //             "tla": "ATA",
+    //             "crest": "https://crests.football-data.org/102.png"
+    //           },
+    //           "playedGames": 3,
+    //           "form": null,
+    //           "won": 1,
+    //           "draw": 0,
+    //           "lost": 2,
+    //           "points": 3,
+    //           "goalsFor": 5,
+    //           "goalsAgainst": 6,
+    //           "goalDifference": -1
+    //         },
+    //         {
+    //           "position": 14,
+    //           "team": {
+    //             "id": 103,
+    //             "name": "Bologna FC 1909",
+    //             "shortName": "Bologna",
+    //             "tla": "BOL",
+    //             "crest": "https://crests.football-data.org/103.png"
+    //           },
+    //           "playedGames": 4,
+    //           "form": null,
+    //           "won": 0,
+    //           "draw": 3,
+    //           "lost": 1,
+    //           "points": 3,
+    //           "goalsFor": 4,
+    //           "goalsAgainst": 7,
+    //           "goalDifference": -3
+    //         },
+    //         {
+    //           "position": 15,
+    //           "team": {
+    //             "id": 5890,
+    //             "name": "US Lecce",
+    //             "shortName": "Lecce",
+    //             "tla": "USL",
+    //             "crest": "https://crests.football-data.org/5890.png"
+    //           },
+    //           "playedGames": 3,
+    //           "form": null,
+    //           "won": 1,
+    //           "draw": 0,
+    //           "lost": 2,
+    //           "points": 3,
+    //           "goalsFor": 1,
+    //           "goalsAgainst": 6,
+    //           "goalDifference": -5
+    //         },
+    //         {
+    //           "position": 16,
+    //           "team": {
+    //             "id": 5911,
+    //             "name": "AC Monza",
+    //             "shortName": "Monza",
+    //             "tla": "MON",
+    //             "crest": "https://crests.football-data.org/5911.png"
+    //           },
+    //           "playedGames": 3,
+    //           "form": null,
+    //           "won": 0,
+    //           "draw": 2,
+    //           "lost": 1,
+    //           "points": 2,
+    //           "goalsFor": 2,
+    //           "goalsAgainst": 3,
+    //           "goalDifference": -1
+    //         },
+    //         {
+    //           "position": 17,
+    //           "team": {
+    //             "id": 100,
+    //             "name": "AS Roma",
+    //             "shortName": "Roma",
+    //             "tla": "ROM",
+    //             "crest": "https://crests.football-data.org/100.png"
+    //           },
+    //           "playedGames": 3,
+    //           "form": null,
+    //           "won": 0,
+    //           "draw": 2,
+    //           "lost": 1,
+    //           "points": 2,
+    //           "goalsFor": 1,
+    //           "goalsAgainst": 2,
+    //           "goalDifference": -1
+    //         },
+    //         {
+    //           "position": 17,
+    //           "team": {
+    //             "id": 104,
+    //             "name": "Cagliari Calcio",
+    //             "shortName": "Cagliari",
+    //             "tla": "CAG",
+    //             "crest": "https://crests.football-data.org/104.png"
+    //           },
+    //           "playedGames": 3,
+    //           "form": null,
+    //           "won": 0,
+    //           "draw": 2,
+    //           "lost": 1,
+    //           "points": 2,
+    //           "goalsFor": 1,
+    //           "goalsAgainst": 2,
+    //           "goalDifference": -1
+    //         },
+    //         {
+    //           "position": 19,
+    //           "team": {
+    //             "id": 7397,
+    //             "name": "Como 1907",
+    //             "shortName": "Como 1907",
+    //             "tla": "COM",
+    //             "crest": "https://crests.football-data.org/7397.png"
+    //           },
+    //           "playedGames": 4,
+    //           "form": null,
+    //           "won": 0,
+    //           "draw": 2,
+    //           "lost": 2,
+    //           "points": 2,
+    //           "goalsFor": 3,
+    //           "goalsAgainst": 7,
+    //           "goalDifference": -4
+    //         },
+    //         {
+    //           "position": 20,
+    //           "team": {
+    //             "id": 454,
+    //             "name": "Venezia FC",
+    //             "shortName": "Venezia FC",
+    //             "tla": "VEN",
+    //             "crest": "https://crests.football-data.org/454.png"
+    //           },
+    //           "playedGames": 4,
+    //           "form": null,
+    //           "won": 0,
+    //           "draw": 1,
+    //           "lost": 3,
+    //           "points": 1,
+    //           "goalsFor": 1,
+    //           "goalsAgainst": 8,
+    //           "goalDifference": -7
+    //         }
+    //       ]
+    //     }
+    //   ]
+    // }
     if (data) {
-      Log.debug(this.name, 'getTable     | data', JSON.stringify(data, null, 2));
+      // Log.debug(this.name, 'getTable     | data', JSON.stringify(data, null, 2));
       if (!this.showStandings) {
         this.refreshTimeout[leagueId] = (data.refresh_time || 5 * 60) * 1000;
       }
-      const tables = data.data.filter((d) => d.type === 'table' && d.table);
+      const tables = data?.standings?.map(s => s.table) || [];
+      const competition = data?.competition || {};
       this.sendSocketNotification(this.name + '-TABLE', {
         leagueId: leagueId,
         table: tables,
+        competition: competition
       });
-
-      const nextRequest = new Date(new Date().getTime() + this.refreshTimeout[leagueId]);
-      Log.info(
-        this.name,
-        `getTable     | next request for league "${this.leaguesList[leagueId].name} (${leagueId})" on ${nextRequest}`
-      );
-
-      this.timeoutTable[leagueId] = setTimeout(() => {
-        this.getTable(leagueId);
-      }, this.refreshTimeout[leagueId]);
     }
   },
 
@@ -178,8 +592,7 @@ module.exports = NodeHelper.create({
       const url = `${this.baseURL}/competitions/${competitionId}`;
       Log.info(this.name, 'fetchMatchDay', url);
       const response = await this.doPost(url);
-      const currentMatchday = response.currentSeason.currentMatchday;
-      return currentMatchday
+      return response.currentSeason.currentMatchday;
     } catch (e) {
       Log.error(this.name, 'fetchMatchDay', competitionId, e);
       return null
@@ -202,58 +615,54 @@ module.exports = NodeHelper.create({
   },
 
   getStandings: async function (leagueCode, round = 0) {
+    Log.debug(this.name, 'getStandings', 'leagueCode', leagueCode, 'round', round);
     try {
-      // if (this.teams === null) {
-      //   this.teams = await this.fetchTeams(leagueCode);
-      // }
+      const now = new Date().toISOString();
+      let timeUntilNextRequest = this.refreshTimeout[leagueCode]
+
       const matchDay = await this.fetchMatchDay(leagueCode, round);
       const fixtures = await this.fetchFixturesForMatchDay(leagueCode, matchDay);
 
+      const competition = fixtures.competition;
       const matches = fixtures?.matches || []
-      // matches.forEach(m => {
-      //   const { teams } = this.teams;
-      //   const homeTeam = teams.find(t => t.id === m.homeTeam.id)
-      //   console.log(homeTeam)
-      //   if (homeTeam) {
-      //     m.homeTeam.flag = homeTeam.crest
-      //   }
-
-      //   const awayTeam = teams.find(t => t.id === m.awayTeam.id)
-      //   if (awayTeam) {
-      //     m.awayTeam.flag = awayTeam.crest
-      //   }
-      // })
 
       let statuses = matches.map(m => m.status);
       const hasActiveGames = statuses.includes('PAUSED') || statuses.includes('IN_PLAY')
-      let timeUntilNextGameMinusFiveMinutes = 0
-      if (!hasActiveGames) {
+      Log.info(this.name, leagueCode, 'getStandings | hasActiveGames:', hasActiveGames);
+      const hasGameInTheNext15Mins = matches.some(m => m.status !== 'FINISHED' && new Date(m.utcDate) - now < 15 * 60 * 1000);
+      Log.info(this.name, leagueCode, 'getStandings | hasGameInTheNext15Mins', hasGameInTheNext15Mins);
+
+      if (!hasActiveGames && !hasGameInTheNext15Mins) {
         const dates = matches.map(m => m.utcDate);
         const nextDates = this.findNextGameDate(dates, true)
         if (nextDates && nextDates.length > 0) {
           const next = nextDates[0];
           const timeUntilNextGame = new Date(next) - new Date();
-          timeUntilNextGameMinusFiveMinutes = timeUntilNextGame - 5 * 60 * 1000
-          if (timeUntilNextGameMinusFiveMinutes > 0) {
-            Log.info(this.name, 'getStandings | timeUntilNextGame', leagueCode, round, timeUntilNextGameMinusFiveMinutes, new Date(new Date().getTime() + timeUntilNextGameMinusFiveMinutes));
-            // self.fetchAllWithInterval(timeUntilNextGameMinusFiveMinutes, false);
-          }
+          timeUntilNextRequest = timeUntilNextGame - 1 * 60 * 1000
         }
       }
-      Log.info(this.name, 'getStandings | timeUntilNextGame', leagueCode, round, timeUntilNextGameMinusFiveMinutes, new Date(new Date().getTime() + timeUntilNextGameMinusFiveMinutes));
 
+      Log.info(this.name, leagueCode, 'getStandings | timeUntilNextRequest', timeUntilNextRequest, new Date(new Date().getTime() + timeUntilNextRequest));
       const matchesGroupedByDate = this.groupByDate(matches)
-      // this.sendSocketNotification(this.name + 'FIXTURES', matchesGroupedByDate);
 
-      // Log.debug(this.name, 'getStandings', JSON.stringify(matchesGroupedByDate))
       this.sendSocketNotification(this.name + '-STANDINGS', {
         leagueId: leagueCode,
         standings: matchesGroupedByDate,
-        nextRequest: new Date(Date.now() + timeUntilNextGameMinusFiveMinutes)
+        competition: competition,
+        nextRequest: new Date(new Date().getTime() + timeUntilNextRequest)
       });
+
+      this.timeoutTable[leagueCode] = setTimeout(() => {
+        this.getAll(leagueCode, matchDay)
+      }, new Date(timeUntilNextRequest).getTime());
     } catch (e) {
-      Log.error(this.name, 'getStandings', e)
-      this.sendSocketNotification(this.name + '-STANDINGS', []);
+      Log.error(this.name, leagueCode, 'getStandings', e)
+      this.sendSocketNotification(this.name + '-STANDINGS', {
+        leagueId: leagueCode,
+        standings: [],
+        competition: {},
+        nextRequest: new Date(new Date().getTime() + timeUntilNextRequest)
+      });
     }
   },
 
@@ -327,6 +736,7 @@ module.exports = NodeHelper.create({
       if (payload.language) {
         this.language = this.supportedLanguages.includes(payload.language) ? payload.language : 'en';
       }
+      this.requestInterval = payload.requestInterval
       this.getLeagueIds(payload.leagues);
     }
   },
