@@ -240,6 +240,10 @@
   text-align: left;
 }
 
+.MMM-SoccerLiveScore-footer-center {
+  text-align: center;
+}
+
 .MMM-SoccerLiveScore-footer-version,
 .MMM-SoccerLiveScore-footer-dates {
   display: inline-block;

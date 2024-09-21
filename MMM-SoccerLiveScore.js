@@ -65,19 +65,19 @@ Module.register('MMM-SoccerLiveScore', {
   },
 
   changeLeague: function (count = 0) {
-    Log.debug(this.name, 'changeLeague', this.config.displayTime, this.activeId, count, this.changeLeagueTimeout);
+    // Log.debug(this.name, 'changeLeague', this.config.displayTime, this.activeId, count, this.changeLeagueTimeout);
     clearTimeout(this.changeLeagueTimeout);
     if (this.idList.length > 0) {
       const index = count % this.idList.length;
       this.activeId = this.idList[index];
       this.standingActive = this.config.showStandings;
-      // this.tableActive =
-      //   this.leagueIds[this.activeId].has_table && !this.config.showStandings && this.config.showTables;
-      // this.scorersActive =
-      //   this.leagueIds[this.activeId].has_scorers &&
-      //   !this.config.showStandings &&
-      //   !this.config.showTables &&
-      //   this.config.showScorers;
+      this.tableActive =
+        this.tables[this.activeId] && !this.config.showStandings && this.config.showTables;
+      this.scorersActive =
+        this.scorers[this.activeId] &&
+        !this.config.showStandings &&
+        !this.config.showTables &&
+        this.config.showScorers;
       this.updateDom();
 
       this.changeLeagueTimeout = setTimeout(() => {
@@ -187,12 +187,6 @@ Module.register('MMM-SoccerLiveScore', {
 
     this.standingActive = true
     return matches;
-    // outerWrapper.appendChild(matches)
-
-
-    // this.standingActive = (!hasTablesToShow && !hasScorersToShow) || false;
-    // this.tableActive = hasTablesToShow;
-    // this.scorersActive = !hasTablesToShow && hasScorersToShow;
   },
 
   getDom: function () {
@@ -214,14 +208,12 @@ Module.register('MMM-SoccerLiveScore', {
     const tables = this.tables && Object.keys(this.tables).length ? this.tables[this.activeId] : [];
     const scorers = this.scorers && Object.keys(this.scorers).length ? this.scorers[this.activeId] : [];
 
+    console.log(this.activeId, standing, tables, scorers)
+
     const hasStandingsToShow = this.config.showStandings === true && standing && Object.keys(standing).length > 0;
     const hasTablesToShow = this.config.showTables === true && Array.isArray(tables) && tables.length > 0;
-    // const hasScorersToShow =
-    //   (this.leagueIds[this.activeId].has_scorers && this.config.showScorers) === true &&
-    //   Array.isArray(scorers) &&
-    //   scorers.length > 0;
-    // const hasTablesToShow = false;
-    const hasScorersToShow = false;
+    const hasScorersToShow = this.config.showScorers === true && Array.isArray(scorers) && scorers.length > 0;
+
     const formatDate = (time) => {
       const d = new Date(time);
       return d.toLocaleString();
@@ -233,14 +225,14 @@ Module.register('MMM-SoccerLiveScore', {
       nextRequest = formatDate(tmp);
     }
 
-    // Log.info(this.name, "getDom", "hasTablesToShow", hasTablesToShow, "this.tableActive", this.tableActive, tables);
+    Log.info(this.name, "getDom", "hasTablesToShow", hasTablesToShow, "this.tableActive", this.tableActive, tables);
 
     if (hasStandingsToShow && this.standingActive) {
       const matches = this.renderStandings({ standing, wrapper, nextRequest })
       outerWrapper.appendChild(matches)
       this.standingActive = (!hasTablesToShow && !hasScorersToShow) || false;
       this.tableActive = hasTablesToShow;
-      // this.scorersActive = !hasTablesToShow && hasScorersToShow;
+      this.scorersActive = !hasTablesToShow && hasScorersToShow;
     } else if (hasTablesToShow && this.tableActive) {
       tables.forEach((t) => {
         const table = t;
@@ -252,8 +244,6 @@ Module.register('MMM-SoccerLiveScore', {
 
           const leagueLogo = document.createElement("img");
           leagueLogo.src = this.competition[this.activeId].emblem
-          // leagueLogo.setAttribute('width', 'auto');
-          // leagueLogo.setAttribute('height', '20px');
           leagueLogo.style = "height: 20px; width: auto; vertical-align: middle";
           title.append(leagueLogo)
 
@@ -398,96 +388,49 @@ Module.register('MMM-SoccerLiveScore', {
 
       this.standingActive = hasStandingsToShow && !hasScorersToShow;
       this.tableActive = (!hasScorersToShow && !hasStandingsToShow) || false;
-      // this.scorersActive = hasScorersToShow;
+      this.scorersActive = hasScorersToShow;
     } else if (hasScorersToShow && this.scorersActive) {
-      scorers.forEach((scorer) => {
-        const table = document.createElement('table');
-        table.className = 'xsmall';
-        const round = standing && 'current_round' in standing ? standing.current_round : null;
-        const roundLabel = round && 'rounds' in standing ? ' | ' + standing.rounds[round - 1] : '';
-        const title = document.createElement('header');
-        title.innerHTML = (this.leagueIds[this.activeId].name + ' ' + roundLabel + ' ' + scorer.type).trim();
-        wrapper.appendChild(title);
 
-        const tableHeaderRow = document.createElement('tr');
+      const table = document.createElement('table');
+      table.className = 'xsmall';
+      const title = document.createElement('header');
+      title.innerHTML = this.competition[this.activeId]?.name;
 
-        const position = document.createElement('th');
-        position.setAttribute('align', 'left');
-        const positionLogo = document.createElement('i');
-        positionLogo.classList.add('fa', 'fa-line-chart');
-        positionLogo.setAttribute('align', 'left');
-        position.appendChild(positionLogo);
-        tableHeaderRow.appendChild(position);
+      const leagueLogo = document.createElement("img");
+      leagueLogo.src = this.competition[this.activeId].emblem
+      leagueLogo.style = "height: 20px; width: auto; vertical-align: middle";
+      title.append(leagueLogo)
 
-        const name = document.createElement('th');
-        name.innerHTML = 'PLAYER';
-        name.setAttribute('align', 'left');
-        tableHeaderRow.appendChild(name);
+      wrapper.appendChild(title);
 
-        const goals = document.createElement('th');
-        const goalsLogo = document.createElement('i');
-        goalsLogo.classList.add('fa', 'fa-soccer-ball-o');
-        goals.setAttribute('align', 'center');
-        goals.appendChild(goalsLogo);
-        tableHeaderRow.appendChild(goals);
+      const tableHeaderRow = document.createElement('tr');
 
-        if (this.config.showLogos) {
-          const logo = document.createElement('th');
-          logo.setAttribute('align', 'left');
-          tableHeaderRow.appendChild(logo);
-        }
+      const goals = document.createElement('th');
+      const goalsLogo = document.createElement('i');
+      goalsLogo.classList.add('fa', 'fa-soccer-ball-o');
+      goals.setAttribute('align', 'center');
+      goals.appendChild(goalsLogo);
+      tableHeaderRow.appendChild(goals);
 
-        if (this.config.showNames) {
-          const playing = document.createElement('th');
-          playing.setAttribute('align', 'left');
-          tableHeaderRow.appendChild(playing);
-        }
+      if (this.config.showLogos) {
+        const logo = document.createElement('th');
+        logo.setAttribute('align', 'left');
+        tableHeaderRow.appendChild(logo);
+      }
 
-        matches.appendChild(tableHeaderRow);
-        wrapper.appendChild(table);
+      const name = document.createElement('th');
+      name.innerHTML = 'PLAYER';
+      name.setAttribute('align', 'left');
+      tableHeaderRow.appendChild(name);
 
-        scorer.scorers.forEach((s) => {
-          const tableRow = document.createElement('tr');
-
-          const position = document.createElement('td');
-          position.innerHTML = s.position;
-          position.setAttribute('align', 'left');
-          tableRow.appendChild(position);
-
-          const name = document.createElement('td');
-          name.innerHTML = s.player_name;
-          name.setAttribute('align', 'left');
-          tableRow.appendChild(name);
-
-          const goals = document.createElement('td');
-          goals.innerHTML = s.goals;
-          goals.setAttribute('align', 'left');
-          tableRow.appendChild(goals);
-
-          if (this.config.showLogos) {
-            const team_logo_cell = document.createElement('td');
-            const team_logo_image = document.createElement('img');
-            team_logo_image.className = 'MMM-SoccerLiveScore-team_logo';
-            if (this.config.logosToInvert.includes(s.team_id)) {
-              team_logo_image.classList.add('MMM-SoccerLiveScore-team_logo--invert');
-            }
-            team_logo_image.src = 'https://www.toralarm.com/api/proxy/images/ta/images/teams/' + s.team_id + '/64/';
-            team_logo_image.width = 20;
-            team_logo_image.height = 20;
-            team_logo_image.setAttribute('align', 'left');
-            team_logo_cell.appendChild(team_logo_image);
-            tableRow.appendChild(team_logo_cell);
-          }
-
-          if (this.config.showNames) {
-            const team_name = document.createElement('td');
-            team_name.setAttribute('align', 'left');
-            team_name.innerHTML = s.team_name;
-            tableRow.appendChild(team_name);
-          }
-
-          matches.appendChild(tableRow);
-        });
+      table.appendChild(tableHeaderRow);
+      wrapper.appendChild(table);
+      scorers.forEach((scorer, position) => {
+        const tr = document.createElement('tr');
+        tr.appendChild(this.buildTD(scorer.goals, 'MMM-SoccerLiveScore-footer-center'));
+        this.config.showLogos && tr.appendChild(this.buildTDForFlag(scorer.team.crest, 'MMM-SoccerLiveScore-footer-left'));
+        tr.appendChild(this.buildTD(scorer.player.name, 'MMM-SoccerLiveScore-footer-left'));
+        table.appendChild(tr)
       });
 
       this.standingActive = hasStandingsToShow;
@@ -496,7 +439,7 @@ Module.register('MMM-SoccerLiveScore', {
     }
 
     const timeSplit = [hasStandingsToShow, hasTablesToShow, hasScorersToShow].filter((v) => v);
-    Log.info(this.name, 'timeSplit', timeSplit.length, this.activeId, this.config.displayTime);
+    // Log.info(this.name, 'timeSplit', timeSplit.length, this.activeId, this.config.displayTime);
 
     clearTimeout(this.updateDomTimeout);
     // if there is something to show, show it
