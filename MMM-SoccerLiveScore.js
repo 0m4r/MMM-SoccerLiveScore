@@ -39,7 +39,7 @@ Module.register('MMM-SoccerLiveScore', {
   },
 
   start: function () {
-    Log.info('Starting module ' + this.name, JSON.stringify(this.config));
+    Log.info('Starting module ' + this.name, JSON.stringify(this.config, null, 2));
     this.logos = {};
     this.standings = {};
     this.leagueIds = {};
@@ -48,24 +48,22 @@ Module.register('MMM-SoccerLiveScore', {
     this.idList = [];
     this.activeId = null;
     this.sendConfig();
-    Log.debug('with config: ' + JSON.stringify(this.config));
   },
 
   stop: function () {
-    Log.info('Stopping module ' + this.name);
+    Log.info('Stopping module ', this.name);
   },
 
   resume: function () {
-    Log.info('Resuming module ' + this.name);
-    Log.debug('with config: ' + JSON.stringify(this.config));
+    Log.info('Resuming module ', this.name);
+    Log.debug('with config: ', JSON.stringify(this.config, null, 2));
   },
 
   suspend: function () {
-    Log.info('Suspending module ' + this.name);
+    Log.info('Suspending module ', this.name);
   },
 
   changeLeague: function (count = 0) {
-    // Log.debug(this.name, 'changeLeague', this.config.displayTime, this.activeId, count, this.changeLeagueTimeout);
     clearTimeout(this.changeLeagueTimeout);
     if (this.idList.length > 0) {
       const index = count % this.idList.length;
@@ -124,6 +122,16 @@ Module.register('MMM-SoccerLiveScore', {
     return td;
   },
 
+  buildTDforDot: function (status) {
+    const is_playing = document.createElement('td');
+    is_playing.classList.add('MMM-SoccerLiveScore__status', 'MMM-SoccerLiveScore__active-dot');
+    const is_playing_dot = document.createElement('p');
+    is_playing_dot.innerHTML = " - ";
+    is_playing_dot.classList.add(`MMM-SoccerLiveScore-${status}`);
+    is_playing.appendChild(is_playing_dot);
+    return is_playing;
+  },
+
   buildTH: function (value) {
     const th = document.createElement('th');
     th.innerHTML = value;
@@ -141,7 +149,7 @@ Module.register('MMM-SoccerLiveScore', {
 
     const leagueLogo = document.createElement("img");
     leagueLogo.src = this.competition[this.activeId].emblem
-    leagueLogo.style = "height: 20px; width: auto; vertical-align: middle";
+    leagueLogo.style = "height: 20px; width: auto; vertical-align: middle; aspect-ratio: 1/1;";
     title.append(leagueLogo)
 
     wrapper.appendChild(title);
@@ -155,14 +163,16 @@ Module.register('MMM-SoccerLiveScore', {
         const tr1 = document.createElement('tr');
         const time = new Date(m.utcDate).toLocaleTimeString()
         tr1.appendChild(this.buildTD(time, [], 7));
-        tr1.classList.add('MMM-SoccerLiveScore-' + m.status, 'MMM-SoccerLiveScore-time-group')
+        tr1.classList.add('MMM-SoccerLiveScore-time-group')
         matches.appendChild(tr1)
 
         const tr = document.createElement('tr');
         tr.appendChild(this.buildTD(m.homeTeam.name, 'MMM-SoccerLiveScore-homeTeam'));
         tr.appendChild(this.buildTDForFlag(m.homeTeam.crest, 'MMM-SoccerLiveScore-flag'));
         tr.appendChild(this.buildTD(m.score.fullTime.home, 'MMM-SoccerLiveScore-score'));
-        tr.appendChild(this.buildTD('-'));
+
+        tr.appendChild(this.buildTDforDot(m.status));
+
         tr.appendChild(this.buildTD(m.score.fullTime.away, 'MMM-SoccerLiveScore-score'));
         tr.appendChild(this.buildTDForFlag(m.awayTeam.crest, 'MMM-SoccerLiveScore-flag'));
         tr.appendChild(this.buildTD(m.awayTeam.name, 'MMM-SoccerLiveScore-awayTeam'));
@@ -190,7 +200,6 @@ Module.register('MMM-SoccerLiveScore', {
   },
 
   getDom: function () {
-    Log.debug(this.name, 'getDom', this.activeId);
     clearTimeout(this.updateDomTimeout);
     const self = this;
     const outerWrapper = document.createElement('div');
@@ -208,8 +217,6 @@ Module.register('MMM-SoccerLiveScore', {
     const tables = this.tables && Object.keys(this.tables).length ? this.tables[this.activeId] : [];
     const scorers = this.scorers && Object.keys(this.scorers).length ? this.scorers[this.activeId] : [];
 
-    console.log(this.activeId, standing, tables, scorers)
-
     const hasStandingsToShow = this.config.showStandings === true && standing && Object.keys(standing).length > 0;
     const hasTablesToShow = this.config.showTables === true && Array.isArray(tables) && tables.length > 0;
     const hasScorersToShow = this.config.showScorers === true && Array.isArray(scorers) && scorers.length > 0;
@@ -224,8 +231,6 @@ Module.register('MMM-SoccerLiveScore', {
       const tmp = new Date(this.nextRequest[this.activeId]);
       nextRequest = formatDate(tmp);
     }
-
-    Log.info(this.name, "getDom", "hasTablesToShow", hasTablesToShow, "this.tableActive", this.tableActive, tables);
 
     if (hasStandingsToShow && this.standingActive) {
       const matches = this.renderStandings({ standing, wrapper, nextRequest })
@@ -406,15 +411,23 @@ Module.register('MMM-SoccerLiveScore', {
       const tableHeaderRow = document.createElement('tr');
 
       const goals = document.createElement('th');
-      const goalsLogo = document.createElement('i');
-      goalsLogo.classList.add('fa', 'fa-soccer-ball-o');
       goals.setAttribute('align', 'center');
-      goals.appendChild(goalsLogo);
+      goals.innerText = "Goals";
       tableHeaderRow.appendChild(goals);
+
+      const penalties = document.createElement('th');
+      penalties.setAttribute('align', 'center');
+      penalties.innerText = "Penalties";
+      tableHeaderRow.appendChild(penalties);
+
+      const assists = document.createElement('th');
+      assists.setAttribute('align', 'center');
+      assists.innerText = 'Assists';
+      tableHeaderRow.appendChild(assists);
 
       if (this.config.showLogos) {
         const logo = document.createElement('th');
-        logo.setAttribute('align', 'left');
+        logo.setAttribute('align', 'right');
         tableHeaderRow.appendChild(logo);
       }
 
@@ -427,9 +440,11 @@ Module.register('MMM-SoccerLiveScore', {
       wrapper.appendChild(table);
       scorers.forEach((scorer, position) => {
         const tr = document.createElement('tr');
-        tr.appendChild(this.buildTD(scorer.goals, 'MMM-SoccerLiveScore-footer-center'));
-        this.config.showLogos && tr.appendChild(this.buildTDForFlag(scorer.team.crest, 'MMM-SoccerLiveScore-footer-left'));
-        tr.appendChild(this.buildTD(scorer.player.name, 'MMM-SoccerLiveScore-footer-left'));
+        tr.appendChild(this.buildTD(scorer.goals, 'MMM-SoccerLiveScore-center'));
+        tr.appendChild(this.buildTD(`${scorer.penalties || 0}`, 'MMM-SoccerLiveScore-center'));
+        tr.appendChild(this.buildTD(`${scorer.assists || 0}`, 'MMM-SoccerLiveScore-center'));
+        this.config.showLogos && tr.appendChild(this.buildTDForFlag(scorer.team.crest, 'MMM-SoccerLiveScore-right'));
+        tr.appendChild(this.buildTD(`${scorer.player.name} (${scorer.team.name})`, 'MMM-SoccerLiveScore-left'));
         table.appendChild(tr)
       });
 
@@ -439,8 +454,6 @@ Module.register('MMM-SoccerLiveScore', {
     }
 
     const timeSplit = [hasStandingsToShow, hasTablesToShow, hasScorersToShow].filter((v) => v);
-    // Log.info(this.name, 'timeSplit', timeSplit.length, this.activeId, this.config.displayTime);
-
     clearTimeout(this.updateDomTimeout);
     // if there is something to show, show it
     if (timeSplit.length > 0) {
@@ -476,7 +489,7 @@ Module.register('MMM-SoccerLiveScore', {
 
   socketNotificationReceived(notification, payload) {
     const name = "MMM-SoccerLiveScore";
-    // Log.info(name, 'socketNotificationReceived', notification, JSON.stringify(payload));
+    // Log.debug(name, 'socketNotificationReceived', notification, JSON.stringify(payload));
     this.standingActive = this.config.showStandings;
     this.tableActive = !this.config.showStandings && this.config.showTables;
     this.scorersActive = !this.config.showStandings && !this.config.showTables && this.config.showScorers;

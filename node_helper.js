@@ -24,16 +24,13 @@ module.exports = NodeHelper.create({
   token: null,
   supportedLanguages: ['it', 'de', 'en'],
   baseURL: 'https://api.football-data.org/v4',
-  // baseURL: "https://49dc9106-7505-4baf-90f7-b719714418c3.mock.pstmn.io",
+
   requestOptions: {
     method: 'GET',
     gzip: true,
     headers: {
-      // Host: 'toralarm.com',
-      // 'accept-language': 'en-US,en;q=0.9,it;q=0.8,de-DE;q=0.7,de;q=0.6',
       'content-type': 'application/json;charset=UTF-8',
     },
-    // body: JSON.stringify({ lng: 'en' }),
   },
   leaguesList: {},
   teams: null,
@@ -94,6 +91,9 @@ module.exports = NodeHelper.create({
   },
 
   doRequest: async function (url, options) {
+    Log.debug(this.name, 'doRequest', "url", url);
+
+
     let data;
     const localUrl = new URL(url);
     const localOptions = {
@@ -108,11 +108,12 @@ module.exports = NodeHelper.create({
         'X-Unfold-Subs': true,
       },
     };
+
     const resp = await fetch(url, localOptions);
     if (resp.status === 200) {
       data = await resp.json();
     } else {
-      Log.error(this.name, 'doRequest', localUrl.href, resp);
+      Log.error(this.name, 'doRequest', localUrl.href, resp.status, resp);
       data = null;
     }
     return data;
@@ -203,14 +204,14 @@ module.exports = NodeHelper.create({
       const matchDay = await this.fetchMatchDay(leagueCode, round);
       const fixtures = await this.fetchFixturesForMatchDay(leagueCode, matchDay);
 
-      const competition = fixtures.competition;
+      const competition = fixtures?.competition;
       const matches = fixtures?.matches || []
 
       let statuses = matches.map(m => m.status);
       const hasActiveGames = statuses.includes('PAUSED') || statuses.includes('IN_PLAY')
-      Log.info(this.name, leagueCode, 'getStandings | hasActiveGames:', hasActiveGames);
+      Log.debug(this.name, leagueCode, 'getStandings | hasActiveGames:', hasActiveGames);
       const hasGameInTheNext15Mins = matches.some(m => m.status !== 'FINISHED' && new Date(m.utcDate) - now < 15 * 60 * 1000);
-      Log.info(this.name, leagueCode, 'getStandings | hasGameInTheNext15Mins', hasGameInTheNext15Mins);
+      Log.debug(this.name, leagueCode, 'getStandings | hasGameInTheNext15Mins', hasGameInTheNext15Mins);
 
       if (!hasActiveGames && !hasGameInTheNext15Mins) {
         const dates = matches.map(m => m.utcDate);
