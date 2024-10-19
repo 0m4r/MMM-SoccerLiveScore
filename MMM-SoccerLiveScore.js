@@ -155,35 +155,40 @@ Module.register('MMM-SoccerLiveScore', {
     wrapper.appendChild(title);
 
     standing.forEach(f => {
-      const tr = document.createElement('tr');
-      tr.appendChild(this.buildTD(new Date(f.date).toLocaleDateString(), 'MMM-SoccerLiveScore-date', 7));
-      matches.appendChild(tr)
-
-      f.games.forEach(m => {
-        const tr1 = document.createElement('tr');
-        const time = new Date(m.utcDate).toLocaleTimeString()
-        tr1.appendChild(this.buildTD(time, [], 7));
-        tr1.classList.add('MMM-SoccerLiveScore-time-group')
-        matches.appendChild(tr1)
-
+      Object.entries(f).forEach(([key, games]) => {
         const tr = document.createElement('tr');
-        tr.appendChild(this.buildTD(m.homeTeam.name, 'MMM-SoccerLiveScore-homeTeam'));
-        tr.appendChild(this.buildTDForFlag(m.homeTeam.crest, 'MMM-SoccerLiveScore-flag'));
-        tr.appendChild(this.buildTD(m.score.fullTime.home, 'MMM-SoccerLiveScore-score'));
-
-        tr.appendChild(this.buildTDforDot(m.status));
-
-        tr.appendChild(this.buildTD(m.score.fullTime.away, 'MMM-SoccerLiveScore-score'));
-        tr.appendChild(this.buildTDForFlag(m.awayTeam.crest, 'MMM-SoccerLiveScore-flag'));
-        tr.appendChild(this.buildTD(m.awayTeam.name, 'MMM-SoccerLiveScore-awayTeam'));
-        tr.classList.add('MMM-SoccerLiveScore-' + m.status)
+        tr.appendChild(this.buildTD(
+          `${new Date(key).toLocaleDateString()} ${new Date(key).toLocaleTimeString()}`,
+          'MMM-SoccerLiveScore-date', 7));
         matches.appendChild(tr)
 
-        m.referees.forEach(r => {
-          const trReferee = document.createElement("tr");
-          trReferee.appendChild(this.buildTD(`${r.type.toLowerCase()}: ${r?.name} (${r?.nationality})`, `MMM-SoccerLiveScore-referee`, 7))
-          matches.appendChild(trReferee)
-        })
+
+        Object.values(games).forEach((m) => {
+          // const tr1 = document.createElement('tr');
+          // const time = new Date(k).toLocaleTimeString()
+          // tr1.appendChild(this.buildTD(time, [], 7));
+          // tr1.classList.add('MMM-SoccerLiveScore-time-group')
+          // matches.appendChild(tr1)
+
+          const tr = document.createElement('tr');
+          tr.appendChild(this.buildTD(m.homeTeam.name, 'MMM-SoccerLiveScore-homeTeam'));
+          tr.appendChild(this.buildTDForFlag(m.homeTeam.crest, 'MMM-SoccerLiveScore-flag'));
+          tr.appendChild(this.buildTD(m.score.fullTime.home, 'MMM-SoccerLiveScore-score'));
+
+          tr.appendChild(this.buildTDforDot(m.status));
+
+          tr.appendChild(this.buildTD(m.score.fullTime.away, 'MMM-SoccerLiveScore-score'));
+          tr.appendChild(this.buildTDForFlag(m.awayTeam.crest, 'MMM-SoccerLiveScore-flag'));
+          tr.appendChild(this.buildTD(m.awayTeam.name, 'MMM-SoccerLiveScore-awayTeam'));
+          tr.classList.add('MMM-SoccerLiveScore-' + m.status)
+          matches.appendChild(tr)
+
+          m.referees.forEach(r => {
+            const trReferee = document.createElement("tr");
+            trReferee.appendChild(this.buildTD(`${r.type.toLowerCase()}: ${r?.name} (${r?.nationality})`, `MMM-SoccerLiveScore-referee`, 7))
+            matches.appendChild(trReferee)
+          })
+        });
       });
     });
 
