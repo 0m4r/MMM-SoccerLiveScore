@@ -22,16 +22,17 @@ Module.register('MMM-SoccerLiveScore', {
   tablesActive: true,
 
   defaults: {
-    leagues: [1], // UEFA Champions League (UCL)
+    leagues: [2019], // Serie A (SA)
     displayTime: 20 * 1000, // 20 seconds
     showNames: true,
     showLogos: true,
     showStandings: true,
     showTables: true,
     showScorers: true,
-    showDetails: true,
     scrollVertical: true,
     logosToInvert: [109], // Juventus
+    requestInterval: 2 * 60 * 1000, // 2 mins
+    token: null
   },
 
   getStyles: function () {
@@ -91,7 +92,6 @@ Module.register('MMM-SoccerLiveScore', {
       showTables: this.config.showTables,
       showScorers: this.config.showScorers,
       showStandings: this.config.showStandings,
-      showDetails: this.config.showDetails,
     };
     this.sendSocketNotification(this.name + '-CONFIG', config);
   },
@@ -164,12 +164,6 @@ Module.register('MMM-SoccerLiveScore', {
 
 
         Object.values(games).forEach((m) => {
-          // const tr1 = document.createElement('tr');
-          // const time = new Date(k).toLocaleTimeString()
-          // tr1.appendChild(this.buildTD(time, [], 7));
-          // tr1.classList.add('MMM-SoccerLiveScore-time-group')
-          // matches.appendChild(tr1)
-
           const tr = document.createElement('tr');
           tr.appendChild(this.buildTD(m.homeTeam.name, 'MMM-SoccerLiveScore-homeTeam'));
           tr.appendChild(this.buildTDForFlag(m.homeTeam.crest, 'MMM-SoccerLiveScore-flag'));
@@ -494,7 +488,7 @@ Module.register('MMM-SoccerLiveScore', {
 
   socketNotificationReceived(notification, payload) {
     const name = "MMM-SoccerLiveScore";
-    // Log.debug(name, 'socketNotificationReceived', notification, JSON.stringify(payload));
+    Log.debug(name, 'socketNotificationReceived', notification, JSON.stringify(payload));
     this.standingActive = this.config.showStandings;
     this.tableActive = !this.config.showStandings && this.config.showTables;
     this.scorersActive = !this.config.showStandings && !this.config.showTables && this.config.showScorers;

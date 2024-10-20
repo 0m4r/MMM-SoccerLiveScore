@@ -7,22 +7,18 @@
 
 const NodeHelper = require('node_helper');
 const Log = require('logger');
+const Bottleneck = require('bottleneck');
 
 module.exports = NodeHelper.create({
   requiresVersion: "2.1.0",
-  requestInterval: 2 * 60 * 1000,
+  requestInterval: 2 * 60 * 1000, // 2mins
   refreshTimeout: {},
-  timeoutStandings: [],
-  timeoutTable: [],
-  timeoutScorers: [],
+  timeout: [],
   showStandings: false,
   showTables: false,
   showScorers: false,
-  showDetails: false,
   scrollVertical: true,
-  language: 'en',
   token: null,
-  supportedLanguages: ['it', 'de', 'en'],
   baseURL: 'https://api.football-data.org/v4',
 
   requestOptions: {
@@ -32,8 +28,16 @@ module.exports = NodeHelper.create({
       'content-type': 'application/json;charset=UTF-8',
     },
   },
-  leaguesList: {},
   teams: null,
+  requestsAvailableMinute: 10, // default for free plan
+  requestsCounterReset: 60, // default for free plan
+  requestsQueue: {},
+  requestsQueueTimeout: null,
+
+  limiter: new Bottleneck({
+    minTime: (60 * 1000) / 10, // 10 requests per minute
+    maxConcurrent: 1
+  }),
 
   findNextGameDate: function (datesArray, after = true) {
     var arr = [...datesArray];
@@ -68,16 +72,13 @@ module.exports = NodeHelper.create({
         [date]: groups[date]
       };
     });
-    console.log(JSON.stringify(groupArrays))
     return groupArrays
   },
 
   clearTimeouts: function () {
-    Log.debug(this.name, 'clearTimeouts');
-    [...this.timeoutStandings, ...this.timeoutScorers, ...this.timeoutTable].forEach((id) => clearTimeout(id));
-    this.timeoutStandings.length = 0;
-    this.timeoutScorers.length = 0;
-    this.timeoutTable.length = 0;
+    Log.debug(this.name, 'clearTimeouts', this.timeout.length);
+    this.timeout.forEach((id) => clearTimeout(id));
+    this.timeout.length = 0;
   },
 
   start: function () {
@@ -108,7 +109,7 @@ module.exports = NodeHelper.create({
       },
     };
 
-    const resp = await fetch(url, localOptions);
+    const resp = await await this.limiter.schedule(() => fetch(url, localOptions));
     if (resp.status === 200) {
       data = await resp.json();
     } else {
@@ -116,6 +117,7 @@ module.exports = NodeHelper.create({
       data = null;
     }
     return data;
+
   },
 
   getLeagueIds: async function (leagues) {
@@ -123,6 +125,7 @@ module.exports = NodeHelper.create({
     const url = `${this.baseURL}/competitions`;
     Log.info(this.name, 'getLeagueIds', url, leagues.join(', '));
     const data = await this.doRequest(url);
+    console.log("getLeagueIds", "data", data)
     this.leaguesList = {};
     if (data) {
       if (data?.competitions) {
@@ -131,7 +134,7 @@ module.exports = NodeHelper.create({
           const comp = competitions.find((c) => 'id' in c && c.id === l);
           if (comp && 'id' in comp) {
             this.leaguesList[comp.id] = { code: comp.code, currentMatchday: comp.currentSeason.currentMatchday };
-            this.refreshTimeout[comp.code] = this.requestInterval || 1 * 60 * 1000
+            this.refreshTimeout[comp.code] = this.requestInterval
           }
         });
 
@@ -146,14 +149,14 @@ module.exports = NodeHelper.create({
 
   getAll: async function (leagueCode, currentMatchday) {
     Log.debug(this.name, 'getAll', 'leagueCode', leagueCode, 'currentMatchday', currentMatchday);
-    this.showStandings && await this.getStandings(leagueCode, currentMatchday);
+    await this.getStandings(leagueCode, currentMatchday);
     this.showTables && await this.getTable(leagueCode);
     this.showScorers && await this.getScorers(leagueCode);
   },
 
   getTable: async function (leagueId) {
     const url = `${this.baseURL}/competitions/${leagueId.toString()}/standings`;
-    Log.debug(this.name, 'getTable', url);
+    Log.debug(this.name, leagueId, 'getTable', url);
     const data = await this.doRequest(url);
     if (data) {
       const tables = data?.standings?.map(s => s.table) || [];
@@ -167,23 +170,23 @@ module.exports = NodeHelper.create({
   },
 
   fetchMatchDay: async function (competitionId) {
-    Log.debug(this.name, 'fetchMatchDay', competitionId);
+    Log.debug(this.name, competitionId, 'fetchMatchDay');
     try {
       const url = `${this.baseURL}/competitions/${competitionId}`;
       Log.info(this.name, 'fetchMatchDay', url);
       const response = await this.doRequest(url);
       return response.currentSeason.currentMatchday;
     } catch (e) {
-      Log.error(this.name, 'fetchMatchDay', competitionId, e);
+      Log.error(this.name, competitionId, 'fetchMatchDay', e);
       return null
     }
   },
 
   fetchFixturesForMatchDay: async function (competitionId, matchDay) {
     if (!matchDay) return null;
-    Log.debug(this.name, 'fetchFixturesForMatchDay', competitionId, matchDay);
+    Log.debug(this.name, competitionId, 'fetchFixturesForMatchDay', matchDay);
     const url = `${this.baseURL}/competitions/${competitionId}/matches?matchday=${matchDay}`;
-    Log.info(this.name, 'fetchFixturesForMatchDay', url);
+    Log.info(this.name, competitionId, 'fetchFixturesForMatchDay', url);
     return await this.doRequest(url);
   },
 
@@ -195,8 +198,8 @@ module.exports = NodeHelper.create({
   },
 
   getStandings: async function (leagueCode, round = 0) {
-    Log.debug(this.name, 'getStandings', 'leagueCode', leagueCode, 'round', round);
-    let timeUntilNextRequest = this.refreshTimeout[leagueCode] || 2 * 60 * 1000
+    Log.debug(this.name, leagueCode, 'getStandings', round);
+    let timeUntilNextRequest = this.refreshTimeout[leagueCode] || this.requestInterval
     try {
       const now = new Date().toISOString();
 
@@ -218,23 +221,25 @@ module.exports = NodeHelper.create({
         if (nextDates && nextDates.length > 0) {
           const next = nextDates[0];
           const timeUntilNextGame = new Date(next) - new Date();
-          timeUntilNextRequest = timeUntilNextGame - 1 * 60 * 1000
+          timeUntilNextRequest = timeUntilNextGame - this.requestInterval
         }
       }
 
       Log.info(this.name, leagueCode, 'getStandings | timeUntilNextRequest', timeUntilNextRequest, new Date(new Date().getTime() + timeUntilNextRequest));
       const matchesGroupedByDate = this.groupByDate(matches)
 
-      this.sendSocketNotification(this.name + '-STANDINGS', {
-        leagueId: leagueCode,
-        standings: matchesGroupedByDate,
-        competition: competition,
-        nextRequest: new Date(new Date().getTime() + timeUntilNextRequest)
-      });
+      if (this.showStandings) {
+        this.sendSocketNotification(this.name + '-STANDINGS', {
+          leagueId: leagueCode,
+          standings: matchesGroupedByDate,
+          competition: competition,
+          nextRequest: new Date(new Date().getTime() + timeUntilNextRequest)
+        });
+      }
 
-      this.timeoutTable[leagueCode] = setTimeout(() => {
+      this.timeout[leagueCode] = setTimeout(() => {
         this.getAll(leagueCode, matchDay)
-      }, new Date(timeUntilNextRequest).getTime());
+      }, timeUntilNextRequest);
     } catch (e) {
       Log.error(this.name, leagueCode, 'getStandings', e)
       this.sendSocketNotification(this.name + '-STANDINGS', {
@@ -248,7 +253,7 @@ module.exports = NodeHelper.create({
 
   getScorers: async function (leagueId) {
     const url = `${this.baseURL}/competitions/${leagueId.toString()}/scorers?limit=20`;
-    Log.debug(this.name, 'getScorers', url);
+    Log.debug(this.name, leagueId, 'getScorers', url);
     const data = await this.doRequest(url);
     if (data) {
       const scorers = data?.scorers || [];
@@ -263,17 +268,17 @@ module.exports = NodeHelper.create({
 
   getDetails: async function (leagueId, matchId) {
     const url = `${this.baseURL}/competitions/${leagueId.toString()}/matches/${matchId.toString()}/details`;
-    Log.debug(this.name, 'getDetails', leagueId, url);
+    Log.debug(this.name, leagueId, 'getDetails', url);
 
     let details = await this.doRequest(url);
 
     if (details && details.data) {
-      Log.debug(this.name, 'getDetails   | data', leagueId, JSON.stringify(details, null, 2));
-      Log.debug(this.name, 'getDetails   | data', 'leagueId', leagueId, 'matchId', matchId);
+      Log.debug(this.name, leagueId, 'getDetails | data', JSON.stringify(details, null, 2));
+      Log.debug(this.name, leagueId, 'getDetails | data', matchId);
       details = details.data || [];
     } else {
       details = [];
-      Log.error(this.name, 'getDetails', leagueId, url, details);
+      Log.error(this.name, leagueId, 'getDetails', url, details);
     }
 
     return details;
@@ -283,13 +288,9 @@ module.exports = NodeHelper.create({
     Log.debug(this.name, 'socketNotificationReceived', notification, payload);
     if (notification === this.name + '-CONFIG') {
       this.showStandings = payload.showStandings;
-      this.showDetails = this.showStandings && payload.showDetails;
       this.showTables = payload.showTables;
       this.showScorers = payload.showScorers;
       this.token = payload.token;
-      if (payload.language) {
-        this.language = this.supportedLanguages.includes(payload.language) ? payload.language : 'en';
-      }
       this.requestInterval = payload.requestInterval
       this.getLeagueIds(payload.leagues);
     }
