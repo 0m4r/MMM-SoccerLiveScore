@@ -125,7 +125,6 @@ module.exports = NodeHelper.create({
     const url = `${this.baseURL}/competitions`;
     Log.info(this.name, 'getLeagueIds', url, leagues.join(', '));
     const data = await this.doRequest(url);
-    console.log("getLeagueIds", "data", data)
     this.leaguesList = {};
     if (data) {
       if (data?.competitions) {
