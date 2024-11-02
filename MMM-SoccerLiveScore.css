@@ -16,16 +16,6 @@
   overflow: hidden;
 }
 
-.MMM-SoccerLiveScore__time {
-  text-align: center;
-  background-color: #6666660d;
-}
-
-.MMM-SoccerLiveScore__colon {
-  width: 2px;
-  text-align: center;
-}
-
 .MMM-SoccerLiveScore-team_logo {
   position: relative;
   top: 3px;
@@ -35,61 +25,10 @@
   filter: invert(1);
 }
 
-.MMM-SoccerLiveScore-team1_logo,
-.MMM-SoccerLiveScore-team2_logo {
-  position: relative;
-  top: 2px;
-  background-color: transparent;
-}
-
-.MMM-SoccerLiveScore-active {
-  color: red;
-  animation: MMMSoccerLiveScorePulsate 4s infinite alternate ease-in-out ;
-}
-
-.MMM-SoccerLiveScore-postponed {
-  color: orange;
-}
-
 .MMM-SoccerLiveScore__is_playing {
   width: 10px;
   text-align: center;
   vertical-align: middle;
-}
-
-.MMM-SoccerLiveScore__is_playing__active-dot {
-  margin: 0;
-  padding: 0;
-  width: 10px;
-  height: 10px;
-  background-color: red;
-  border-radius: 100%;
-  animation: MMMSoccerLiveScorePulsate 4s infinite alternate ease-in-out;
-  animation-iteration-count: infinite;
-  opacity: 0.1;
-  display: inline-block;
-}
-
-.MMM-SoccerLiveScore-details,
-.MMM-SoccerLiveScore-match_info {
-  position: relative;
-  height: 2ch;
-}
-
-.MMM-SoccerLiveScore-details i {
-  margin: 0 0.5ch;
-}
-
-.MMM-SoccerLiveScore-details-red {
-  background: red;
-  width: 6px;
-  height: 12px;
-}
-
-.MMM-SoccerLiveScore-details-yellow {
-  background: yellow;
-  width: 6px;
-  height: 12px;
 }
 
 .MMM-SoccerLiveScore-horizontal-infinite-scroll {
@@ -122,6 +61,149 @@
   position: relative;
   z-index: 100;
 }
+
+.MMM-SoccerLiveScore__status p {
+  vertical-align: middle;
+  margin: 0;
+  padding: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 100%;
+  animation: MMMSoccerLiveScorePulsate 4s infinite alternate ease-in-out;
+  animation-iteration-count: infinite;
+  opacity: 0.1;
+  display: inline-block;
+}
+
+.MMM-SoccerLiveScore-PAUSED,
+.MMM-SoccerLiveScore-IN_PLAY {
+  opacity: 1;
+}
+
+.MMM-SoccerLiveScore-SCHEDULED,
+.MMM-SoccerLiveScore-TIMED {
+  opacity: 0.3;
+}
+
+.MMM-SoccerLiveScore-FINISHED,
+.MMM-SoccerLiveScore-AWARDED,
+.MMM-SoccerLiveScore-CANCELLED,
+.MMM-SoccerLiveScore-SUSPENDED,
+.MMM-SoccerLiveScore-POSTPONED {
+  opacity: 0.8;
+}
+
+.MMM-SoccerLiveScore__status .MMM-SoccerLiveScore-PAUSED,
+.MMM-SoccerLiveScore__status .MMM-SoccerLiveScore-IN_PLAY {
+  color: red;
+  background-color: red;
+}
+
+.MMM-SoccerLiveScore__status .MMM-SoccerLiveScore-CANCELLED,
+.MMM-SoccerLiveScore__status .MMM-SoccerLiveScore-SUSPENDED,
+.MMM-SoccerLiveScore__status .MMM-SoccerLiveScore-POSTPONED {
+  color: orange;
+  background-color: orange;
+}
+
+.MMM-SoccerLiveScore-awayTeam {
+  text-align: left;
+  width: 40%;
+}
+
+.MMM-SoccerLiveScore-homeTeam {
+  text-align: right;
+  width: 40%;
+}
+
+.MMM-SoccerLiveScore-date,
+.MMM-SoccerLiveScore-time-group,
+.MMM-SoccerLiveScore-referee {
+  font-size: smaller;
+  background-color: #6666663a;
+  text-align: center;
+  font-size: smaller;
+}
+
+.MMM-SoccerLiveScore-referee {
+  background: transparent;
+  color: var(--color-text);
+}
+
+.MMM-SoccerLiveScore-header {
+  font-size: 12px;
+  margin: 0;
+  text-align: right;
+  line-height: 1.5rem;
+}
+
+.MMM-SoccerLiveScore-footer {
+  font-size: 12px;
+  margin: 0;
+  border-top: 1px solid var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.MMM-SoccerLiveScore-right,
+.MMM-SoccerLiveScore-left {
+  flex: 0 1 100%;
+}
+
+.MMM-SoccerLiveScore-right {
+  text-align: right;
+}
+
+.MMM-SoccerLiveScore-left {
+  text-align: left;
+}
+
+.MMM-SoccerLiveScore-center {
+  text-align: center;
+}
+
+.MMM-SoccerLiveScore-version,
+.MMM-SoccerLiveScore-dates {
+  display: inline-block;
+  max-width: 100%;
+}
+.MMM-SoccerLiveScore-version {
+  margin-left: 0.5rem;
+}
+
+.MMM-SoccerLiveScore-dates {
+  margin-right: 0.5rem;
+}
+
+.MMM-SoccerLiveScore-version-update {
+  color: gold;
+}
+
+.MMM-SoccerLiveScore--error {
+  animation: pulsate 2s infinite alternate ease-in-out;
+  background: var(--color-background);
+  color: red;
+}
+
+@keyframes pulsate {
+  0% {
+    opacity: 0.3;
+  }
+  20% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0.3;
+  }
+}
+
 
 @keyframes MMMSoccerLiveScoreScrollLeft {
   to {
