@@ -34,18 +34,15 @@ module.exports = NodeHelper.create({
   requestsQueue: {},
   requestsQueueTimeout: null,
 
-  limiter: new Bottleneck({
-    minTime: (60 * 1000) / this.requestsAvailablePerMinute, // 10 requests per minute
-    maxConcurrent: 1
-  }),
+  limiter: null,
 
   findNextGameDate: function (datesArray, after = true) {
-    var arr = [...datesArray];
-    var now = new Date();
+    const arr = [...datesArray];
+    const now = new Date();
 
     arr.sort(function (a, b) {
-      var distanceA = Math.abs(now - new Date(a));
-      var distanceB = Math.abs(now - new Date(b));
+      const distanceA = Math.abs(now - new Date(a));
+      const distanceB = Math.abs(now - new Date(b));
       return distanceA - distanceB; // sort a before b when the distance is smaller
     });
 
@@ -83,6 +80,10 @@ module.exports = NodeHelper.create({
 
   start: function () {
     Log.log('Starting node helper for:', this.name);
+    this.limiter = new Bottleneck({
+      minTime: (60 * 1000) / this.requestsAvailablePerMinute, // 10 requests per minute
+      maxConcurrent: 1
+    });
   },
 
   stop: function () {
@@ -93,27 +94,31 @@ module.exports = NodeHelper.create({
   doRequest: async function (url, options) {
     Log.info(this.name, 'doRequest', "url", url);
 
-
     let data;
-    const localUrl = new URL(url);
-    const localOptions = {
-      ...this.requestOptions,
-      ...options,
-      headers: {
-        ...this.requestOptions?.header,
-        ...options?.header,
-        'X-Auth-Token': this.token,
-        'X-Unfold-Bookings': true,
-        'X-Unfold-Goals': true,
-        'X-Unfold-Subs': true,
-      },
-    };
+    try {
+      const localUrl = new URL(url);
+      const localOptions = {
+        ...this.requestOptions,
+        ...options,
+        headers: {
+          ...this.requestOptions?.headers,
+          ...options?.header,
+          'X-Auth-Token': this.token,
+          'X-Unfold-Bookings': true,
+          'X-Unfold-Goals': true,
+          'X-Unfold-Subs': true,
+        },
+      };
 
-    const resp = await await this.limiter.schedule(() => fetch(url, localOptions));
-    if (resp.status === 200) {
-      data = await resp.json();
-    } else {
-      Log.error(this.name, 'doRequest', localUrl.href, resp.status, resp);
+      const resp = await this.limiter.schedule(() => fetch(url, localOptions));
+      if (resp.status === 200) {
+        data = await resp.json();
+      } else {
+        Log.error(this.name, 'doRequest', localUrl.href, resp.status, resp);
+        data = null;
+      }
+    } catch (err) {
+      Log.error(this.name, 'doRequest', url, err);
       data = null;
     }
     return data;
@@ -137,9 +142,9 @@ module.exports = NodeHelper.create({
           }
         });
 
-        Object.values(this.leaguesList).forEach(async ({ code, currentMatchday }) => {
-          this.getAll(code, currentMatchday);
-        });
+        for (const { code, currentMatchday } of Object.values(this.leaguesList)) {
+          await this.getAll(code, currentMatchday);
+        }
       }
     }
     Log.debug(this.name, 'getLeagueIds', this.leaguesList);
