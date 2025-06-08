@@ -96,8 +96,9 @@ module.exports = NodeHelper.create({
 
     let data;
     try {
-      const localUrl = new URL(url);
+      const localUrl = new URL(url).searchParams.append("t", Date.now());
       const localOptions = {
+        cache: 'no-cache',
         ...this.requestOptions,
         ...options,
         headers: {
@@ -126,9 +127,13 @@ module.exports = NodeHelper.create({
   },
 
   getLeagueIds: async function (leagues) {
+    if (!leagues) {
+      this.sendSocketNotification(this.name + '-LEAGUES', null);
+      return;
+    };
     this.clearTimeouts();
     const url = `${this.baseURL}/competitions`;
-    Log.debug(this.name, 'getLeagueIds', url, leagues.join(', '));
+    Log.debug(this.name, 'getLeagueIds', url, leagues?.join(', '));
     const data = await this.doRequest(url);
     this.leaguesList = {};
     if (data) {
@@ -141,19 +146,22 @@ module.exports = NodeHelper.create({
             this.refreshTimeout[comp.code] = this.requestInterval
           }
         });
-
-        for (const { code, currentMatchday } of Object.values(this.leaguesList)) {
-          await this.getAll(code, currentMatchday);
+        Log.info(this.name, 'getLeagueIds', this.leaguesList);
+        this.sendSocketNotification(this.name + '-LEAGUES', { leaguesList: this.leaguesList });
+        if (Object.keys(this.leaguesList).length > 0) {
+          for (const { code, currentMatchday } of Object.values(this.leaguesList)) {
+            this.getAll(code, currentMatchday);
+          }
         }
       }
     }
-    Log.debug(this.name, 'getLeagueIds', this.leaguesList);
-    this.sendSocketNotification(this.name + '-LEAGUES', { leaguesList: this.leaguesList });
+
+
   },
 
   getAll: async function (leagueCode, currentMatchday) {
     Log.debug(this.name, 'getAll', 'leagueCode', leagueCode, 'currentMatchday', currentMatchday);
-    await this.getStandings(leagueCode, currentMatchday);
+    this.showStandings && await this.getStandings(leagueCode, currentMatchday);
     this.showTables && await this.getTable(leagueCode);
     this.showScorers && await this.getScorers(leagueCode);
   },
@@ -287,7 +295,7 @@ module.exports = NodeHelper.create({
     return details;
   },
 
-  socketNotificationReceived: function (notification, payload) {
+  socketNotificationReceived: async function (notification, payload) {
     if (notification === this.name + '-CONFIG') {
       Log.info(this.name, 'socketNotificationReceived', notification, payload);
       this.showStandings = payload.showStandings;
@@ -295,7 +303,7 @@ module.exports = NodeHelper.create({
       this.showScorers = payload.showScorers;
       this.token = payload.token;
       this.requestInterval = payload.requestInterval
-      this.getLeagueIds(payload.leagues);
+      await this.getLeagueIds(payload.leagues);
     }
   },
 });
